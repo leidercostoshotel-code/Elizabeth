@@ -129,6 +129,11 @@ function guardarEnSheets(datos) {
   ]);
 
   const ultimaFila = hoja.getLastRow();
+
+  // Mostrar imagen directamente en la celda
+  hoja.getRange(ultimaFila, 9).setFormula('=IMAGE("' + datos.urlFoto + '",4,80,120)');
+  hoja.setRowHeight(ultimaFila, 90);
+
   colorearEstado(hoja, ultimaFila, datos.estado);
 
   return id;
