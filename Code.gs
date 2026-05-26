@@ -2,16 +2,6 @@
 // GOOGLE APPS SCRIPT - Control de Evidencias
 // Autor: LTM Soluciones Digitales
 // =============================================
-//
-// INSTRUCCIONES DE CONFIGURACION:
-// 1. Crea un nuevo proyecto en script.google.com
-// 2. Pega este codigo completo
-// 3. Despliega como Web App:
-//    Deploy > New Deployment > Web App
-//    Execute as: Me
-//    Who has access: Anyone
-// 4. Copia la URL del deployment y pégala en la app HTML (variable SCRIPT_URL)
-// =============================================
 
 const SPREADSHEET_ID = '1QtJ6JWHAW29eNOVBsnszKj5c2teiFk4KoRXT91-z6DY';
 const CARPETA_NOMBRE = 'Evidencias Fotograficas';
@@ -22,39 +12,47 @@ const MESES = [
   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
 ];
 
-// Fila 1 = Titulo | Fila 2 = Filtro mes | Fila 3 = Cabeceras | Fila 4+ = Datos
+// Estructura: Fila 1=Titulo | Fila 2=Filtro mes | Fila 3=Cabeceras | Fila 4+=Datos
 const FILA_TITULO    = 1;
 const FILA_FILTRO    = 2;
 const FILA_CABECERAS = 3;
 const FILA_DATOS     = 4;
 
+// Columnas identicas al formato Walk Through
 const CABECERAS = [
-  'ID', 'Fecha y Hora', 'Responsable', 'Estado',
-  'Observación', 'Latitud', 'Longitud', 'Foto', 'ID Drive'
+  'AREA',
+  'DESCRIPCION DE HALLAZGO',
+  'REGISTRO FOTOGRAFICO',
+  'RESPONSABLE',
+  'DEPARTAMENTO',
+  'Comentario - Respuesta del area responsable',
+  'REGISTRO FOTOGRAFICO DEL LEVANTAMIENTO',
+  'ESTADO'
 ];
 
-// =============================================
-// CORS
+// Columnas internas (ocultas)
+const COL_ID_INTERNO   = 9;
+const COL_FECHA        = 10;
+
 // =============================================
 function doOptions(e) { return buildResponse({}); }
 
 // =============================================
-// POST - Recibe datos desde la app HTML
+// POST
 // =============================================
 function doPost(e) {
   try {
-    const payload = JSON.parse(e.postData.contents);
-    const fotoInfo = guardarFotoEnDrive(payload.foto);
+    const p = JSON.parse(e.postData.contents);
+    const fotoInfo = guardarFotoEnDrive(p.foto);
     const id = guardarEnSheets({
-      fecha:       payload.fecha || new Date().toLocaleString('es-PE'),
-      responsable: payload.responsable || '',
-      area:        payload.area || 'General',
-      estado:      payload.estado || '',
-      observacion: payload.observacion || '',
-      latitud:     payload.latitud || '',
-      longitud:    payload.longitud || '',
-      urlFoto:     fotoInfo.url,
-      idFoto:      fotoInfo.id
+      fecha:        p.fecha || new Date().toLocaleString('es-PE'),
+      area:         p.area || '',
+      descripcion:  p.descripcion || '',
+      responsable:  p.responsable || '',
+      departamento: p.departamento || '',
+      estado:       p.estado || '',
+      urlFoto:      fotoInfo.url,
+      idFoto:       fotoInfo.id
     });
     return buildResponse({ resultado: 'ok', id: id, urlFoto: fotoInfo.url });
   } catch (err) {
@@ -83,7 +81,7 @@ function guardarFotoEnDrive(base64) {
 }
 
 // =============================================
-// Guardar en la pestaña del area correspondiente
+// Guardar en la pestaña del area
 // =============================================
 function guardarEnSheets(datos) {
   const ss   = SpreadsheetApp.openById(SPREADSHEET_ID);
@@ -100,34 +98,51 @@ function guardarEnSheets(datos) {
   if (ultima >= FILA_DATOS) hoja.showRows(FILA_DATOS, ultima - FILA_DATOS + 1);
 
   const id = generarId();
+
+  // Columnas: AREA | DESC HALLAZGO | FOTO | RESPONSABLE | DEPTO | COMENTARIO | FOTO_LEV | ESTADO | ID | FECHA
   hoja.appendRow([
-    id, datos.fecha, datos.responsable, datos.estado,
-    datos.observacion, datos.latitud, datos.longitud,
-    datos.urlFoto, datos.idFoto
+    datos.area,
+    datos.descripcion,
+    datos.urlFoto,      // se reemplaza por IMAGE() abajo
+    datos.responsable,
+    datos.departamento,
+    '',                 // Comentario - se llena manualmente en el sheet
+    '',                 // Foto levantamiento - se llena manualmente
+    datos.estado,
+    id,
+    datos.fecha
   ]);
 
   const fila = hoja.getLastRow();
-  hoja.getRange(fila, 8).setFormula('=IMAGE("' + datos.urlFoto + '",4,100,140)');
-  hoja.setRowHeight(fila, 110);
-  hoja.getRange(fila, 1, 1, CABECERAS.length)
-    .setVerticalAlignment('middle').setFontSize(10)
-    .setBorder(true, true, true, true, false, false, '#CCCCCC', SpreadsheetApp.BorderStyle.SOLID);
-  if (fila % 2 !== 0) hoja.getRange(fila, 1, 1, CABECERAS.length).setBackground('#F7F9FC');
-  colorearEstado(hoja, fila, datos.estado);
 
-  // Re-aplicar filtro de mes activo
+  // Imagen visible en columna 3
+  hoja.getRange(fila, 3).setFormula('=IMAGE("' + datos.urlFoto + '",4,100,140)');
+  hoja.setRowHeight(fila, 120);
+
+  // Formato de la fila
+  hoja.getRange(fila, 1, 1, 8)
+    .setVerticalAlignment('middle')
+    .setFontSize(10)
+    .setWrap(true)
+    .setBorder(true, true, true, true, true, true, '#CCCCCC', SpreadsheetApp.BorderStyle.SOLID);
+
+  if (fila % 2 !== 0) hoja.getRange(fila, 1, 1, 8).setBackground('#F7F9FC');
+
+  colorearEstado(hoja, fila, datos.estado);
   aplicarFiltroMes(hoja);
 
   return id;
 }
 
 // =============================================
-// Inicializar pestaña de area
+// Inicializar pestaña nueva
 // =============================================
 function inicializarHoja(hoja, area) {
-  // Fila 1: Titulo
-  hoja.appendRow([HOTEL_NOMBRE + ' - ' + area.toUpperCase()]);
-  hoja.getRange(FILA_TITULO, 1, 1, CABECERAS.length).merge()
+  const mesActual = MESES[new Date().getMonth()] + ' ' + new Date().getFullYear();
+
+  // Fila 1: Titulo estilo Walk Through
+  hoja.appendRow([HOTEL_NOMBRE + ' - WALK THROUGH - ' + mesActual.toUpperCase()]);
+  hoja.getRange(FILA_TITULO, 1, 1, 8).merge()
     .setBackground('#1A3C5E').setFontColor('#FFFFFF')
     .setFontWeight('bold').setFontSize(16)
     .setHorizontalAlignment('center').setVerticalAlignment('middle');
@@ -143,28 +158,28 @@ function inicializarHoja(hoja, area) {
 }
 
 // =============================================
-// Fila de filtro por mes (fila 2)
+// Filtro de mes (fila 2)
 // =============================================
 function configurarFiltroMes(hoja) {
   hoja.getRange(FILA_FILTRO, 1).setValue('FILTRAR POR MES:')
-    .setFontWeight('bold').setFontColor('#1A3C5E').setHorizontalAlignment('right');
+    .setFontWeight('bold').setFontColor('#FFFFFF').setHorizontalAlignment('right');
 
   const mesesOpc = ['Todos', ...MESES];
   const regla = SpreadsheetApp.newDataValidation()
     .requireValueInList(mesesOpc, true).setAllowInvalid(false).build();
 
   hoja.getRange(FILA_FILTRO, 2).setDataValidation(regla).setValue('Todos')
-    .setBackground('#EAF4FB').setFontWeight('bold').setHorizontalAlignment('center');
+    .setBackground('#FFFFFF').setFontWeight('bold').setHorizontalAlignment('center');
 
-  hoja.getRange(FILA_FILTRO, 3).setValue('← Selecciona un mes para filtrar')
-    .setFontColor('#888888').setFontStyle('italic');
+  hoja.getRange(FILA_FILTRO, 3).setValue('← Selecciona un mes')
+    .setFontColor('#AAAAAA').setFontStyle('italic');
 
-  hoja.getRange(FILA_FILTRO, 1, 1, CABECERAS.length).setBackground('#D6EAF8');
-  hoja.setRowHeight(FILA_FILTRO, 38);
+  hoja.getRange(FILA_FILTRO, 1, 1, 8).setBackground('#7F8C8D');
+  hoja.setRowHeight(FILA_FILTRO, 35);
 }
 
 // =============================================
-// Filtrar filas por mes seleccionado
+// Aplicar filtro por mes
 // =============================================
 function aplicarFiltroMes(hoja) {
   const mesFiltro  = hoja.getRange(FILA_FILTRO, 2).getValue() || 'Todos';
@@ -175,19 +190,19 @@ function aplicarFiltroMes(hoja) {
   if (mesFiltro === 'Todos') return;
 
   for (let i = FILA_DATOS; i <= ultimaFila; i++) {
-    const fecha = String(hoja.getRange(i, 2).getValue());
-    let mesRegistro = '';
+    const fecha = String(hoja.getRange(i, COL_FECHA).getValue());
     const partes = fecha.split('/');
+    let mesRegistro = '';
     if (partes.length >= 2) {
-      const numMes = parseInt(partes[1]);
-      if (numMes >= 1 && numMes <= 12) mesRegistro = MESES[numMes - 1];
+      const n = parseInt(partes[1]);
+      if (n >= 1 && n <= 12) mesRegistro = MESES[n - 1];
     }
     if (mesRegistro !== mesFiltro) hoja.hideRows(i);
   }
 }
 
 // =============================================
-// Trigger onEdit - filtra al cambiar el desplegable
+// onEdit trigger
 // =============================================
 function onEdit(e) {
   const hoja = e.source.getActiveSheet();
@@ -197,29 +212,34 @@ function onEdit(e) {
 }
 
 // =============================================
-// Cabeceras (fila 3)
+// Formato cabeceras (fila 3) - identico al Walk Through
 // =============================================
 function formatearCabeceras(hoja) {
-  hoja.getRange(FILA_CABECERAS, 1, 1, CABECERAS.length)
-    .setBackground('#2E5F8A').setFontColor('#FFFFFF')
+  hoja.getRange(FILA_CABECERAS, 1, 1, 8)
+    .setBackground('#1A3C5E').setFontColor('#FFFFFF')
     .setFontWeight('bold').setFontSize(11)
-    .setHorizontalAlignment('center').setVerticalAlignment('middle');
-  hoja.setRowHeight(FILA_CABECERAS, 40);
+    .setHorizontalAlignment('center').setVerticalAlignment('middle')
+    .setWrap(true);
+  hoja.setRowHeight(FILA_CABECERAS, 50);
   hoja.setFrozenRows(FILA_CABECERAS);
 
-  hoja.setColumnWidth(1, 100);  // ID
-  hoja.setColumnWidth(2, 170);  // Fecha
-  hoja.setColumnWidth(3, 140);  // Responsable
-  hoja.setColumnWidth(4, 120);  // Estado
-  hoja.setColumnWidth(5, 260);  // Observacion
-  hoja.setColumnWidth(6, 90);   // Latitud
-  hoja.setColumnWidth(7, 90);   // Longitud
-  hoja.setColumnWidth(8, 170);  // Foto
-  hoja.hideColumns(9);          // ID Drive oculto
+  // Anchos de columna = Walk Through
+  hoja.setColumnWidth(1, 140);  // AREA
+  hoja.setColumnWidth(2, 220);  // DESCRIPCION DE HALLAZGO
+  hoja.setColumnWidth(3, 180);  // REGISTRO FOTOGRAFICO
+  hoja.setColumnWidth(4, 130);  // RESPONSABLE
+  hoja.setColumnWidth(5, 130);  // DEPARTAMENTO
+  hoja.setColumnWidth(6, 220);  // COMENTARIO RESPUESTA
+  hoja.setColumnWidth(7, 180);  // FOTO LEVANTAMIENTO
+  hoja.setColumnWidth(8, 110);  // ESTADO
+
+  // Ocultar columnas internas
+  hoja.hideColumns(9);
+  hoja.hideColumns(10);
 }
 
 // =============================================
-// Colores por estado
+// Colores por estado (columna 8)
 // =============================================
 function colorearEstado(hoja, fila, estado) {
   const colores = {
@@ -230,22 +250,19 @@ function colorearEstado(hoja, fila, estado) {
   };
   const c = colores[estado];
   if (c) {
-    hoja.getRange(fila, 4)
+    hoja.getRange(fila, 8)
       .setBackground(c.bg).setFontColor(c.font)
       .setFontWeight('bold').setHorizontalAlignment('center');
   }
 }
 
 // =============================================
-// Generar ID
+// ID y CORS
 // =============================================
 function generarId() {
   return 'EV-' + new Date().getTime().toString(36).toUpperCase();
 }
 
-// =============================================
-// Respuesta CORS
-// =============================================
 function buildResponse(data) {
   const out = ContentService.createTextOutput(JSON.stringify(data));
   out.setMimeType(ContentService.MimeType.JSON);
@@ -253,50 +270,46 @@ function buildResponse(data) {
 }
 
 // =============================================
-// REFORMATEAR - Aplica diseño a hoja existente
-// Selecciona esta funcion y presiona Ejecutar
+// REFORMATEAR - Ejecuta una vez desde el IDE
 // =============================================
 function reformatearHoja() {
-  const ss   = SpreadsheetApp.openById(SPREADSHEET_ID);
-  // Aplica a todas las pestanas existentes excepto hoja inicial vacia
+  const ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
   const hojas = ss.getSheets().filter(h => h.getLastRow() > 0);
+  const mesActual = MESES[new Date().getMonth()] + ' ' + new Date().getFullYear();
 
   hojas.forEach(hoja => {
-    const val1 = String(hoja.getRange(1, 1).getValue());
-    const val2 = String(hoja.getRange(2, 1).getValue());
-    const val3 = String(hoja.getRange(3, 1).getValue());
+    const v1 = String(hoja.getRange(1, 1).getValue());
 
-    if (!val1.includes(HOTEL_NOMBRE)) {
+    if (!v1.includes('WALK THROUGH') && !v1.includes(HOTEL_NOMBRE)) {
       hoja.insertRowBefore(1);
-      hoja.getRange(1, 1, 1, CABECERAS.length).merge()
-        .setValue(HOTEL_NOMBRE + ' - ' + hoja.getName().toUpperCase())
+      hoja.getRange(1, 1, 1, 8).merge()
+        .setValue(HOTEL_NOMBRE + ' - WALK THROUGH - ' + mesActual.toUpperCase())
         .setBackground('#1A3C5E').setFontColor('#FFFFFF')
         .setFontWeight('bold').setFontSize(16)
         .setHorizontalAlignment('center').setVerticalAlignment('middle');
       hoja.setRowHeight(1, 55);
     }
 
-    if (val2 !== 'FILTRAR POR MES:') {
+    if (String(hoja.getRange(2, 1).getValue()) !== 'FILTRAR POR MES:') {
       hoja.insertRowBefore(2);
       configurarFiltroMes(hoja);
     }
 
-    const val3nuevo = String(hoja.getRange(3, 1).getValue());
-    if (val3nuevo !== 'ID') {
+    if (String(hoja.getRange(3, 1).getValue()) !== 'AREA') {
       hoja.insertRowBefore(3);
-      hoja.getRange(3, 1, 1, CABECERAS.length).setValues([CABECERAS]);
+      hoja.getRange(3, 1, 1, 8).setValues([CABECERAS]);
     }
 
     formatearCabeceras(hoja);
 
     const ultimaFila = hoja.getLastRow();
     for (let i = FILA_DATOS; i <= ultimaFila; i++) {
-      hoja.setRowHeight(i, 110);
-      hoja.getRange(i, 1, 1, CABECERAS.length)
-        .setVerticalAlignment('middle').setFontSize(10)
-        .setBorder(true, true, true, true, false, false, '#CCCCCC', SpreadsheetApp.BorderStyle.SOLID);
-      if (i % 2 !== 0) hoja.getRange(i, 1, 1, CABECERAS.length).setBackground('#F7F9FC');
-      const estado = hoja.getRange(i, 4).getValue();
+      hoja.setRowHeight(i, 120);
+      hoja.getRange(i, 1, 1, 8)
+        .setVerticalAlignment('middle').setFontSize(10).setWrap(true)
+        .setBorder(true, true, true, true, true, true, '#CCCCCC', SpreadsheetApp.BorderStyle.SOLID);
+      if (i % 2 !== 0) hoja.getRange(i, 1, 1, 8).setBackground('#F7F9FC');
+      const estado = hoja.getRange(i, 8).getValue();
       if (estado) colorearEstado(hoja, i, estado);
     }
 
@@ -308,12 +321,12 @@ function reformatearHoja() {
 // TEST
 // =============================================
 function testManual() {
-  const r = guardarEnSheets({
-    fecha: new Date().toLocaleString('es-PE'), responsable: 'Leider T.',
-    area: 'Banquetes', estado: 'Conforme',
-    observacion: 'Prueba manual desde el IDE',
-    latitud: '-12.0464', longitud: '-77.0428',
+  guardarEnSheets({
+    fecha: new Date().toLocaleString('es-PE'), area: 'Banquetes',
+    descripcion: 'Cortinas sucias en salon principal',
+    responsable: 'Leider T.', departamento: 'Housekeeping',
+    estado: 'Pendiente',
     urlFoto: 'https://via.placeholder.com/400', idFoto: 'test_id'
   });
-  Logger.log('Registro guardado: ' + r);
+  Logger.log('Test completado');
 }
