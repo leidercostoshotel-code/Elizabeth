@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Control de Evidencias</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --primary: #1A3C5E;
+    --accent: #C9A84C;
+    --accent-light: #F0D98A;
+    --bg: #F4F6F9;
+    --surface: #FFFFFF;
+    --text: #1C2B3A;
+    --muted: #6B7C93;
+    --border: #D8E2EE;
+    --success: #1A7F54;
+    --success-bg: #E6F7F0;
+    --error: #C0392B;
+    --error-bg: #FCF0EF;
+    --radius: 14px;
+    --shadow: 0 4px 24px rgba(26,60,94,0.10);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* HEADER */
+  .app-header {
+    background: var(--primary);
+    padding: 16px 20px 14px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(26,60,94,0.18);
+  }
+
+  .header-icon {
+    width: 38px;
+    height: 38px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .header-icon svg { width: 22px; height: 22px; fill: white; }
+
+  .header-title {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 17px;
+    color: white;
+    line-height: 1.2;
+  }
+
+  .header-sub {
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+    font-weight: 400;
+    margin-top: 2px;
+  }
+
+  /* MAIN CONTENT */
+  .app-body {
+    padding: 20px 16px 40px;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  /* SECCIÓN FOTO */
+  .section-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .section-label svg { width: 14px; height: 14px; }
+
+  /* ZONA DE FOTO */
+  .photo-zone {
+    background: var(--surface);
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    min-height: 220px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    margin-bottom: 8px;
+  }
+
+  .photo-zone:hover { border-color: var(--accent); background: #FEFCF5; }
+  .photo-zone.has-photo { border-style: solid; border-color: var(--accent); cursor: default; }
+
+  .photo-placeholder {
+    text-align: center;
+    padding: 30px;
+  }
+
+  .photo-placeholder svg {
+    width: 52px;
+    height: 52px;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  .photo-placeholder p {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .photo-placeholder span {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--primary);
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  #preview-img {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    display: none;
+    border-radius: calc(var(--radius) - 2px);
+  }
+
+  .photo-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--success);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'Montserrat', sans-serif;
+    padding: 4px 10px;
+    border-radius: 20px;
+    display: none;
+  }
+
+  /* BOTONES FOTO */
+  .photo-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .btn-photo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 14px;
+    border-radius: 10px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+  }
+
+  .btn-photo svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+  .btn-camara {
+    background: var(--primary);
+    color: white;
+  }
+
+  .btn-camara:hover { background: #122D47; }
+
+  .btn-galeria {
+    background: var(--surface);
+    color: var(--primary);
+    border: 1.5px solid var(--border);
+  }
+
+  .btn-galeria:hover { border-color: var(--primary); background: #F0F4F8; }
+
+  /* CAMPOS DE TEXTO */
+  .field-group { margin-bottom: 16px; }
+
+  .field-label {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--text);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .field-label .optional {
+    font-weight: 400;
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'Inter', sans-serif;
+  }
+
+  .field-input, .field-textarea, .field-select {
+    width: 100%;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s;
+    -webkit-appearance: none;
+  }
+
+  .field-input:focus, .field-textarea:focus, .field-select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
+  }
+
+  .field-textarea {
+    min-height: 90px;
+    resize: vertical;
+    line-height: 1.5;
+  }
+
+  /* DIVIDER */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+  }
+
+  /* ESTADO ACTUAL */
+  .estado-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .estado-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .estado-chip input[type="radio"] { display: none; }
+
+  .estado-chip .chip-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .estado-chip.selected-ok { border-color: var(--success); background: var(--success-bg); color: var(--success); }
+  .estado-chip.selected-mal { border-color: var(--error); background: var(--error-bg); color: var(--error); }
+  .estado-chip.selected-pend { border-color: #E67E22; background: #FEF5E7; color: #B7770D; }
+  .estado-chip.selected-info { border-color: var(--primary); background: #EEF4FB; color: var(--primary); }
+
+  /* UBICACION */
+  .ubicacion-bar {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+
+  .ubicacion-bar:hover { border-color: var(--accent); }
+
+  .ubicacion-bar svg { width: 18px; height: 18px; color: var(--muted); flex-shrink: 0; }
+
+  .ubicacion-text {
+    flex: 1;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .ubicacion-text.loaded { color: var(--text); }
+
+  .ubicacion-badge {
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'Montserrat', sans-serif;
+    background: #EEF4FB;
+    color: var(--primary);
+    padding: 3px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  /* BTN ENVIAR */
+  .btn-enviar {
+    width: 100%;
+    padding: 15px;
+    background: var(--accent);
+    color: var(--primary);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 900;
+    font-size: 15px;
+    letter-spacing: 0.04em;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 16px rgba(201,168,76,0.35);
+  }
+
+  .btn-enviar:hover { background: #B8923E; box-shadow: 0 6px 20px rgba(201,168,76,0.45); }
+  .btn-enviar:active { transform: scale(0.98); }
+  .btn-enviar:disabled { background: var(--border); color: var(--muted); box-shadow: none; cursor: not-allowed; }
+  .btn-enviar svg { width: 20px; height: 20px; }
+
+  /* PROGRESO */
+  .progress-bar {
+    height: 4px;
+    background: var(--border);
+    border-radius: 4px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    display: none;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--primary));
+    border-radius: 4px;
+    width: 0%;
+    transition: width 0.4s ease;
+  }
+
+  /* TOAST / NOTIFICACION */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--primary);
+    color: white;
+    padding: 13px 20px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 999;
+    box-shadow: var(--shadow);
+    transition: transform 0.3s ease;
+    max-width: 340px;
+    width: calc(100% - 32px);
+  }
+
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { background: var(--success); }
+  .toast.error { background: var(--error); }
+  .toast svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+  /* MODAL CAMARA */
+  .camera-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 500;
+    flex-direction: column;
+  }
+
+  .camera-modal.open { display: flex; }
+
+  #camera-video {
+    width: 100%;
+    flex: 1;
+    object-fit: cover;
+    background: #111;
+  }
+
+  .camera-controls {
+    background: #111;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .btn-shutter {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: white;
+    border: 4px solid rgba(255,255,255,0.3);
+    cursor: pointer;
+    transition: transform 0.1s;
+    flex-shrink: 0;
+  }
+
+  .btn-shutter:active { transform: scale(0.9); }
+
+  .btn-cam-close, .btn-cam-switch {
+    width: 44px;
+    height: 44px;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  .btn-cam-close svg, .btn-cam-switch svg { width: 20px; height: 20px; }
+
+  canvas#snap-canvas { display: none; }
+
+  /* RESPONSIVE */
+  @media (max-width: 360px) {
+    .photo-actions { grid-template-columns: 1fr; }
+    .estado-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="app-header">
+  <div class="header-icon">
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 15.2A3.2 3.2 0 1 0 12 8.8a3.2 3.2 0 0 0 0 6.4z"/>
+      <path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+    </svg>
+  </div>
+  <div>
+    <div class="header-title">Control de Evidencias</div>
+    <div class="header-sub">Registro fotográfico operativo</div>
+  </div>
+</header>
+
+<!-- MODAL CAMARA -->
+<div class="camera-modal" id="cameraModal">
+  <video id="camera-video" autoplay playsinline muted></video>
+  <canvas id="snap-canvas"></canvas>
+  <div class="camera-controls">
+    <button class="btn-cam-close" onclick="cerrarCamara()" title="Cerrar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <button class="btn-shutter" onclick="tomarFoto()" title="Tomar foto"></button>
+    <button class="btn-cam-switch" onclick="switchCamara()" title="Cambiar camara">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><circle cx="12" cy="13" r="3"/><path d="m16 3-4-4-4 4"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- CONTENIDO PRINCIPAL -->
+<main class="app-body">
+
+  <!-- ZONA FOTO -->
+  <div class="section-label">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 15.2A3.2 3.2 0 1 0 12 8.8a3.2 3.2 0 0 0 0 6.4z"/><path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9z"/></svg>
+    Foto de Evidencia
+  </div>
+
+  <div class="photo-zone" id="photoZone" onclick="abrirGaleria()">
+    <img id="preview-img" alt="Evidencia">
+    <div class="photo-badge" id="photoBadge">✓ Foto capturada</div>
+    <div class="photo-placeholder" id="photoPlaceholder">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+        <circle cx="12" cy="13" r="4"/>
+      </svg>
+      <span>Toca para seleccionar foto</span>
+      <p>o usa los botones de abajo</p>
+    </div>
+  </div>
+
+  <div class="photo-actions">
+    <button class="btn-photo btn-camara" onclick="abrirCamara()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      Camara
+    </button>
+    <button class="btn-photo btn-galeria" onclick="abrirGaleria()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+      Galeria
+    </button>
+  </div>
+
+  <input type="file" id="fileInput" accept="image/*" capture="environment" style="display:none" onchange="cargarImagen(event)">
+
+  <div class="divider"></div>
+
+  <!-- CAMPOS DEL FORMULARIO -->
+  <div class="field-group">
+    <div class="field-label">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Responsable
+    </div>
+    <input class="field-input" id="campo-responsable" type="text" placeholder="Nombre del responsable">
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      Area / Zona
+    </div>
+    <select class="field-select" id="campo-area">
+      <option value="">Seleccionar area...</option>
+      <option>Cocina</option>
+      <option>Bar</option>
+      <option>Almacen</option>
+      <option>Restaurante</option>
+      <option>Pasteleria</option>
+      <option>Banquetes</option>
+      <option>Housekeeping</option>
+      <option>Mantenimiento</option>
+      <option>Recepcion</option>
+      <option>Otro</option>
+    </select>
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Estado de la evidencia
+    </div>
+    <div class="estado-grid">
+      <label class="estado-chip" id="chip-ok" onclick="selEstado('OK','ok')">
+        <input type="radio" name="estado" value="OK">
+        <span class="chip-dot" style="background:#1A7F54"></span>
+        Conforme
+      </label>
+      <label class="estado-chip" id="chip-mal" onclick="selEstado('No conforme','mal')">
+        <input type="radio" name="estado" value="No conforme">
+        <span class="chip-dot" style="background:#C0392B"></span>
+        No conforme
+      </label>
+      <label class="estado-chip" id="chip-pend" onclick="selEstado('Pendiente','pend')">
+        <input type="radio" name="estado" value="Pendiente">
+        <span class="chip-dot" style="background:#E67E22"></span>
+        Pendiente
+      </label>
+      <label class="estado-chip" id="chip-info" onclick="selEstado('Informativo','info')">
+        <input type="radio" name="estado" value="Informativo">
+        <span class="chip-dot" style="background:#1A3C5E"></span>
+        Informativo
+      </label>
+    </div>
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Observacion
+      <span class="optional">(opcional)</span>
+    </div>
+    <textarea class="field-textarea" id="campo-obs" placeholder="Describe el hallazgo, condicion observada o detalle relevante..."></textarea>
+  </div>
+
+  <!-- UBICACION -->
+  <div class="section-label">
+    <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+    Ubicacion GPS
+  </div>
+
+  <div class="ubicacion-bar" onclick="obtenerUbicacion()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+    </svg>
+    <span class="ubicacion-text" id="ubicacion-text">Toca para capturar ubicacion</span>
+    <span class="ubicacion-badge" id="ubicacion-badge" style="display:none">GPS</span>
+  </div>
+
+  <!-- BARRA PROGRESO -->
+  <div class="progress-bar" id="progressBar">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+
+  <!-- BOTON ENVIAR -->
+  <button class="btn-enviar" id="btnEnviar" onclick="enviarEvidencia()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/>
+    </svg>
+    Enviar Evidencia
+  </button>
+
+</main>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <svg id="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"></svg>
+  <span id="toast-msg"></span>
+</div>
+
+<script>
+  // =============================================
+  // CONFIGURACION - Cambia esta URL por la de tu Apps Script
+  // =============================================
+  const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwxB264nB7KNBwx5mqStiuPRlQumDr7m7Ca6710hT0o3joVP35lWYtrNQ4Za3N_sG2X/exec';
+  // =============================================
+
+  let photoBase64 = null;
+  let estadoSeleccionado = '';
+  let latLon = null;
+  let streamActivo = null;
+  let facingMode = 'environment';
+
+  // ---- CAMARA ----
+  async function abrirCamara() {
+    try {
+      if (streamActivo) { streamActivo.getTracks().forEach(t => t.stop()); }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode, width: { ideal: 1280 }, height: { ideal: 960 } }
+      });
+      streamActivo = stream;
+      document.getElementById('camera-video').srcObject = stream;
+      document.getElementById('cameraModal').classList.add('open');
+    } catch(e) {
+      mostrarToast('No se pudo acceder a la camara', 'error');
+    }
+  }
+
+  function cerrarCamara() {
+    if (streamActivo) { streamActivo.getTracks().forEach(t => t.stop()); streamActivo = null; }
+    document.getElementById('cameraModal').classList.remove('open');
+  }
+
+  async function switchCamara() {
+    facingMode = facingMode === 'environment' ? 'user' : 'environment';
+    await abrirCamara();
+  }
+
+  function tomarFoto() {
+    const video = document.getElementById('camera-video');
+    const canvas = document.getElementById('snap-canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    photoBase64 = canvas.toDataURL('image/jpeg', 0.8);
+    mostrarPreview(photoBase64);
+    cerrarCamara();
+    mostrarToast('Foto tomada correctamente', 'success');
+  }
+
+  // ---- GALERIA ----
+  function abrirGaleria() {
+    document.getElementById('fileInput').click();
+  }
+
+  function cargarImagen(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      photoBase64 = e.target.result;
+      mostrarPreview(photoBase64);
+      mostrarToast('Imagen seleccionada', 'success');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function mostrarPreview(src) {
+    const img = document.getElementById('preview-img');
+    const ph = document.getElementById('photoPlaceholder');
+    const badge = document.getElementById('photoBadge');
+    const zone = document.getElementById('photoZone');
+    img.src = src;
+    img.style.display = 'block';
+    ph.style.display = 'none';
+    badge.style.display = 'block';
+    zone.classList.add('has-photo');
+    zone.onclick = null;
+  }
+
+  // ---- ESTADO ----
+  function selEstado(valor, tipo) {
+    estadoSeleccionado = valor;
+    ['ok','mal','pend','info'].forEach(t => {
+      document.getElementById('chip-' + t).className = 'estado-chip';
+    });
+    document.getElementById('chip-' + tipo).className = 'estado-chip selected-' + tipo;
+  }
+
+  // ---- UBICACION ----
+  function obtenerUbicacion() {
+    const el = document.getElementById('ubicacion-text');
+    el.textContent = 'Obteniendo ubicacion...';
+    navigator.geolocation.getCurrentPosition(pos => {
+      latLon = { lat: pos.coords.latitude.toFixed(6), lon: pos.coords.longitude.toFixed(6) };
+      el.textContent = latLon.lat + ', ' + latLon.lon;
+      el.classList.add('loaded');
+      document.getElementById('ubicacion-badge').style.display = 'block';
+    }, () => {
+      el.textContent = 'No se pudo obtener la ubicacion';
+      mostrarToast('Permiso de ubicacion denegado', 'error');
+    });
+  }
+
+  // ---- TOAST ----
+  function mostrarToast(msg, tipo) {
+    const t = document.getElementById('toast');
+    const icon = document.getElementById('toast-icon');
+    const msgEl = document.getElementById('toast-msg');
+    t.className = 'toast ' + (tipo || '');
+    msgEl.textContent = msg;
+    if (tipo === 'success') {
+      icon.innerHTML = '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22,4 12,14.01 9,11.01"/>';
+    } else if (tipo === 'error') {
+      icon.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>';
+    } else {
+      icon.innerHTML = '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12.01" y2="16"/><line x1="12" y1="8" x2="12" y2="12"/>';
+    }
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3500);
+  }
+
+  // ---- PROGRESO ----
+  function setProgreso(pct) {
+    const bar = document.getElementById('progressBar');
+    const fill = document.getElementById('progressFill');
+    bar.style.display = 'block';
+    fill.style.width = pct + '%';
+    if (pct >= 100) setTimeout(() => { bar.style.display = 'none'; fill.style.width = '0%'; }, 600);
+  }
+
+  // ---- ENVIO PRINCIPAL ----
+  async function enviarEvidencia() {
+    if (!photoBase64) { mostrarToast('Debes agregar una foto de evidencia', 'error'); return; }
+    if (!estadoSeleccionado) { mostrarToast('Selecciona el estado de la evidencia', 'error'); return; }
+
+    const responsable = document.getElementById('campo-responsable').value.trim();
+    const area = document.getElementById('campo-area').value;
+    const observacion = document.getElementById('campo-obs').value.trim();
+
+    const btn = document.getElementById('btnEnviar');
+    btn.disabled = true;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite;width:20px;height:20px"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Enviando...`;
+    setProgreso(30);
+
+    const fecha = new Date().toLocaleString('es-PE', { timeZone: 'America/Lima' });
+
+    const payload = {
+      fecha,
+      responsable,
+      area,
+      estado: estadoSeleccionado,
+      observacion,
+      latitud: latLon ? latLon.lat : '',
+      longitud: latLon ? latLon.lon : '',
+      foto: photoBase64
+    };
+
+    try {
+      setProgreso(60);
+      const res = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      setProgreso(90);
+      const data = await res.json();
+      setProgreso(100);
+
+      if (data.resultado === 'ok') {
+        mostrarToast('Evidencia enviada correctamente', 'success');
+        limpiarFormulario();
+      } else {
+        mostrarToast('Error al guardar: ' + (data.error || 'desconocido'), 'error');
+      }
+    } catch(e) {
+      setProgreso(100);
+      mostrarToast('Error de conexion. Verifica la URL del Script.', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px;height:20px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg> Enviar Evidencia`;
+    }
+  }
+
+  function limpiarFormulario() {
+    photoBase64 = null;
+    estadoSeleccionado = '';
+    latLon = null;
+    document.getElementById('preview-img').style.display = 'none';
+    document.getElementById('photoPlaceholder').style.display = 'block';
+    document.getElementById('photoBadge').style.display = 'none';
+    const zone = document.getElementById('photoZone');
+    zone.classList.remove('has-photo');
+    zone.onclick = () => abrirGaleria();
+    document.getElementById('campo-responsable').value = '';
+    document.getElementById('campo-area').value = '';
+    document.getElementById('campo-obs').value = '';
+    document.getElementById('ubicacion-text').textContent = 'Toca para capturar ubicacion';
+    document.getElementById('ubicacion-text').classList.remove('loaded');
+    document.getElementById('ubicacion-badge').style.display = 'none';
+    document.getElementById('fileInput').value = '';
+    ['ok','mal','pend','info'].forEach(t => {
+      document.getElementById('chip-' + t).className = 'estado-chip';
+    });
+  }
+</script>
+
+<style>
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+</style>
+</body>
+</html>
