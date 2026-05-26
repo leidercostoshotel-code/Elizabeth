@@ -6,30 +6,30 @@
 // INSTRUCCIONES DE CONFIGURACION:
 // 1. Crea un nuevo proyecto en script.google.com
 // 2. Pega este codigo completo
-// 3. Cambia SPREADSHEET_ID por el ID de tu Google Sheets
-// 4. Despliega como Web App:
+// 3. Despliega como Web App:
 //    Deploy > New Deployment > Web App
 //    Execute as: Me
 //    Who has access: Anyone
-// 5. Copia la URL del deployment y pégala en la app HTML (variable SCRIPT_URL)
+// 4. Copia la URL del deployment y pégala en la app HTML (variable SCRIPT_URL)
 // =============================================
 
 const SPREADSHEET_ID = '1QtJ6JWHAW29eNOVBsnszKj5c2teiFk4KoRXT91-z6DY';
 const CARPETA_NOMBRE = 'Evidencias Fotograficas';
 const HOJA_NOMBRE    = 'Evidencias';
+const HOTEL_NOMBRE   = 'HOTEL ELIZABETH';
 
 // ---- CABECERAS de la hoja ----
 const CABECERAS = [
   'ID',
   'Fecha y Hora',
   'Responsable',
-  'Area',
+  'Área',
   'Estado',
-  'Observacion',
+  'Observación',
   'Latitud',
   'Longitud',
-  'URL Foto',
-  'ID Foto Drive'
+  'Foto',
+  'ID Drive'
 ];
 
 // =============================================
@@ -46,10 +46,8 @@ function doPost(e) {
   try {
     const payload = JSON.parse(e.postData.contents);
 
-    // Guardar foto en Drive
-    const fotoInfo = guardarFotoEnDrive(payload.foto, payload.fecha);
+    const fotoInfo = guardarFotoEnDrive(payload.foto);
 
-    // Guardar registro en Sheets
     const id = guardarEnSheets({
       fecha:       payload.fecha || new Date().toLocaleString('es-PE'),
       responsable: payload.responsable || '',
@@ -81,7 +79,7 @@ function obtenerCarpeta() {
 // =============================================
 // Guarda la foto en Google Drive
 // =============================================
-function guardarFotoEnDrive(base64, fecha) {
+function guardarFotoEnDrive(base64) {
   const base64Limpio = base64.replace(/^data:image\/\w+;base64,/, '');
   const blob = Utilities.newBlob(
     Utilities.base64Decode(base64Limpio),
@@ -91,13 +89,10 @@ function guardarFotoEnDrive(base64, fecha) {
 
   const folder = obtenerCarpeta();
   const file = folder.createFile(blob);
-
   file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
 
   const fileId = file.getId();
-  const urlFoto = 'https://drive.google.com/uc?id=' + fileId;
-
-  return { id: fileId, url: urlFoto };
+  return { id: fileId, url: 'https://drive.google.com/uc?id=' + fileId };
 }
 
 // =============================================
@@ -109,8 +104,7 @@ function guardarEnSheets(datos) {
 
   if (!hoja) {
     hoja = ss.insertSheet(HOJA_NOMBRE);
-    hoja.appendRow(CABECERAS);
-    formatearCabeceras(hoja);
+    inicializarHoja(hoja);
   }
 
   const id = generarId();
@@ -128,15 +122,76 @@ function guardarEnSheets(datos) {
     datos.idFoto
   ]);
 
-  const ultimaFila = hoja.getLastRow();
+  const fila = hoja.getLastRow();
 
-  // Mostrar imagen directamente en la celda
-  hoja.getRange(ultimaFila, 9).setFormula('=IMAGE("' + datos.urlFoto + '",4,80,120)');
-  hoja.setRowHeight(ultimaFila, 90);
+  // Imagen visible directamente en la celda
+  hoja.getRange(fila, 9).setFormula('=IMAGE("' + datos.urlFoto + '",4,100,140)');
+  hoja.setRowHeight(fila, 110);
 
-  colorearEstado(hoja, ultimaFila, datos.estado);
+  // Alineacion vertical centrada en toda la fila
+  hoja.getRange(fila, 1, 1, CABECERAS.length)
+    .setVerticalAlignment('middle')
+    .setFontSize(10)
+    .setBorder(true, true, true, true, false, false, '#CCCCCC', SpreadsheetApp.BorderStyle.SOLID);
+
+  colorearEstado(hoja, fila, datos.estado);
+
+  // Alternar color de fila para legibilidad
+  if (fila % 2 === 0) {
+    hoja.getRange(fila, 1, 1, CABECERAS.length).setBackground('#F7F9FC');
+  }
 
   return id;
+}
+
+// =============================================
+// Inicializa la hoja con titulo y cabeceras
+// =============================================
+function inicializarHoja(hoja) {
+  // Fila 1: Titulo
+  hoja.appendRow([HOTEL_NOMBRE + ' - REGISTRO DE EVIDENCIAS']);
+  const titulo = hoja.getRange(1, 1, 1, CABECERAS.length);
+  titulo.merge()
+    .setValue(HOTEL_NOMBRE + ' - REGISTRO DE EVIDENCIAS')
+    .setBackground('#1A3C5E')
+    .setFontColor('#FFFFFF')
+    .setFontWeight('bold')
+    .setFontSize(16)
+    .setHorizontalAlignment('center')
+    .setVerticalAlignment('middle');
+  hoja.setRowHeight(1, 55);
+
+  // Fila 2: Cabeceras
+  hoja.appendRow(CABECERAS);
+  formatearCabeceras(hoja);
+}
+
+// =============================================
+// Formato de cabeceras (fila 2)
+// =============================================
+function formatearCabeceras(hoja) {
+  const rango = hoja.getRange(2, 1, 1, CABECERAS.length);
+  rango
+    .setBackground('#2E5F8A')
+    .setFontColor('#FFFFFF')
+    .setFontWeight('bold')
+    .setFontSize(11)
+    .setHorizontalAlignment('center')
+    .setVerticalAlignment('middle');
+  hoja.setRowHeight(2, 40);
+  hoja.setFrozenRows(2);
+
+  // Anchos de columna
+  hoja.setColumnWidth(1, 100);  // ID
+  hoja.setColumnWidth(2, 170);  // Fecha y Hora
+  hoja.setColumnWidth(3, 140);  // Responsable
+  hoja.setColumnWidth(4, 140);  // Area
+  hoja.setColumnWidth(5, 120);  // Estado
+  hoja.setColumnWidth(6, 260);  // Observacion
+  hoja.setColumnWidth(7, 90);   // Latitud
+  hoja.setColumnWidth(8, 90);   // Longitud
+  hoja.setColumnWidth(9, 170);  // Foto
+  hoja.setColumnWidth(10, 0);   // ID Drive (oculto)
 }
 
 // =============================================
@@ -145,33 +200,18 @@ function guardarEnSheets(datos) {
 function colorearEstado(hoja, fila, estado) {
   const celda = hoja.getRange(fila, 5);
   const colores = {
-    'Conforme':    { bg: '#E6F7F0', font: '#1A7F54' },
-    'No conforme': { bg: '#FCF0EF', font: '#C0392B' },
+    'Conforme':    { bg: '#D4EDDA', font: '#1A7F54' },
+    'No conforme': { bg: '#FADBD8', font: '#C0392B' },
     'Pendiente':   { bg: '#FEF5E7', font: '#B7770D' },
-    'Informativo': { bg: '#EEF4FB', font: '#1A3C5E' }
+    'Informativo': { bg: '#D6EAF8', font: '#1A5276' }
   };
   const c = colores[estado];
   if (c) {
-    celda.setBackground(c.bg).setFontColor(c.font).setFontWeight('bold');
+    celda.setBackground(c.bg)
+      .setFontColor(c.font)
+      .setFontWeight('bold')
+      .setHorizontalAlignment('center');
   }
-}
-
-// =============================================
-// Formato de cabeceras
-// =============================================
-function formatearCabeceras(hoja) {
-  const rango = hoja.getRange(1, 1, 1, CABECERAS.length);
-  rango
-    .setBackground('#1A3C5E')
-    .setFontColor('#FFFFFF')
-    .setFontWeight('bold')
-    .setFontSize(11);
-  hoja.setFrozenRows(1);
-  hoja.setColumnWidths(1, CABECERAS.length, 160);
-  hoja.setColumnWidth(1, 80);
-  hoja.setColumnWidth(2, 180);
-  hoja.setColumnWidth(9, 220);
-  hoja.setColumnWidth(6, 280);
 }
 
 // =============================================
@@ -206,4 +246,48 @@ function testManual() {
     idFoto:      'test_id'
   });
   Logger.log('Registro guardado: ' + resultado);
+}
+
+// =============================================
+// REFORMATEAR - Corre esto una vez si ya tienes
+// datos en la hoja y quieres aplicar el nuevo diseño
+// =============================================
+function reformatearHoja() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const hoja = ss.getSheetByName(HOJA_NOMBRE);
+  if (!hoja) { Logger.log('Hoja no encontrada'); return; }
+
+  // Insertar fila de titulo si no existe
+  const primerValor = hoja.getRange(1, 1).getValue();
+  if (primerValor !== HOTEL_NOMBRE + ' - REGISTRO DE EVIDENCIAS') {
+    hoja.insertRowBefore(1);
+    const titulo = hoja.getRange(1, 1, 1, CABECERAS.length);
+    titulo.merge()
+      .setValue(HOTEL_NOMBRE + ' - REGISTRO DE EVIDENCIAS')
+      .setBackground('#1A3C5E')
+      .setFontColor('#FFFFFF')
+      .setFontWeight('bold')
+      .setFontSize(16)
+      .setHorizontalAlignment('center')
+      .setVerticalAlignment('middle');
+    hoja.setRowHeight(1, 55);
+  }
+
+  formatearCabeceras(hoja);
+
+  // Reformatear filas de datos existentes
+  const ultimaFila = hoja.getLastRow();
+  for (let i = 3; i <= ultimaFila; i++) {
+    hoja.setRowHeight(i, 110);
+    hoja.getRange(i, 1, 1, CABECERAS.length)
+      .setVerticalAlignment('middle')
+      .setFontSize(10)
+      .setBorder(true, true, true, true, false, false, '#CCCCCC', SpreadsheetApp.BorderStyle.SOLID);
+    if (i % 2 === 0) hoja.getRange(i, 1, 1, CABECERAS.length).setBackground('#F7F9FC');
+    const estado = hoja.getRange(i, 5).getValue();
+    if (estado) colorearEstado(hoja, i, estado);
+  }
+
+  hoja.setColumnWidth(10, 0);
+  Logger.log('Hoja reformateada correctamente');
 }
