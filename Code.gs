@@ -7,16 +7,15 @@
 // 1. Crea un nuevo proyecto en script.google.com
 // 2. Pega este codigo completo
 // 3. Cambia SPREADSHEET_ID por el ID de tu Google Sheets
-// 4. Cambia FOLDER_ID por el ID de tu carpeta en Drive (donde se guardan las fotos)
-// 5. Despliega como Web App:
+// 4. Despliega como Web App:
 //    Deploy > New Deployment > Web App
 //    Execute as: Me
 //    Who has access: Anyone
-// 6. Copia la URL del deployment y pégala en la app HTML (variable SCRIPT_URL)
+// 5. Copia la URL del deployment y pégala en la app HTML (variable SCRIPT_URL)
 // =============================================
 
-const SPREADSHEET_ID = 'TU_SPREADSHEET_ID_AQUI';
-const FOLDER_ID      = 'TU_FOLDER_ID_AQUI';
+const SPREADSHEET_ID = '1QtJ6JWHAW29eNOVBsnszKj5c2teiFk4KoRXT91-z6DY';
+const CARPETA_NOMBRE = 'Evidencias Fotograficas';
 const HOJA_NOMBRE    = 'Evidencias';
 
 // ---- CABECERAS de la hoja ----
@@ -71,6 +70,15 @@ function doPost(e) {
 }
 
 // =============================================
+// Obtiene o crea la carpeta de fotos en Drive
+// =============================================
+function obtenerCarpeta() {
+  const carpetas = DriveApp.getFoldersByName(CARPETA_NOMBRE);
+  if (carpetas.hasNext()) return carpetas.next();
+  return DriveApp.createFolder(CARPETA_NOMBRE);
+}
+
+// =============================================
 // Guarda la foto en Google Drive
 // =============================================
 function guardarFotoEnDrive(base64, fecha) {
@@ -81,7 +89,7 @@ function guardarFotoEnDrive(base64, fecha) {
     'evidencia_' + generarId() + '.jpg'
   );
 
-  const folder = DriveApp.getFolderById(FOLDER_ID);
+  const folder = obtenerCarpeta();
   const file = folder.createFile(blob);
 
   file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
