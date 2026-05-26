@@ -333,6 +333,39 @@
     white-space: nowrap;
   }
 
+  /* AREA COMBO */
+  .area-combo { position: relative; }
+  .area-search-wrap { position: relative; }
+  .area-search-wrap input { padding-right: 38px; cursor: pointer; }
+  .area-arrow {
+    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+    color: var(--muted); pointer-events: none; transition: transform .2s;
+  }
+  .area-arrow.open { transform: translateY(-50%) rotate(180deg); }
+  .area-lista {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+    background: #fff; border: 1px solid var(--border); border-radius: 14px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.13); overflow: hidden;
+    z-index: 200; display: none;
+  }
+  .area-lista.open { display: block; }
+  .area-opcion {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px; cursor: pointer; transition: background .15s;
+    font-size: 15px; font-weight: 500;
+  }
+  .area-opcion:hover, .area-opcion.key-hover { background: #F0F4F8; }
+  .area-opcion.oculto { display: none; }
+  .area-opcion.seleccionado { background: #EEF4FB; }
+  .area-icono {
+    width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .area-icono svg { width: 18px; height: 18px; stroke: #fff; fill: none; stroke-width: 2; }
+  .area-sin-resultados {
+    padding: 14px; text-align: center; color: var(--muted); font-size: 14px; display: none;
+  }
+
   /* BTN ENVIAR */
   .btn-enviar {
     width: 100%;
@@ -543,13 +576,43 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
       Area / Zona
     </div>
-    <select class="field-select" id="campo-area">
-      <option value="">Seleccionar area...</option>
-      <option>Mantenimiento</option>
-      <option>Cocina</option>
-      <option>Limpieza</option>
-      <option>Sistemas</option>
-    </select>
+    <div class="area-combo" id="areaCombo">
+      <div class="area-search-wrap">
+        <input class="field-input" id="campo-area-texto" type="text"
+               placeholder="Buscar área..." autocomplete="off"
+               oninput="filtrarAreas()" onfocus="abrirDropdownArea()" readonly
+               onclick="toggleDropdownArea()">
+        <svg class="area-arrow" id="areaArrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="area-lista" id="areaLista">
+        <div class="area-opcion" data-value="Mantenimiento" onclick="seleccionarArea(this)">
+          <div class="area-icono" style="background:#E67E22">
+            <svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+          </div>
+          Mantenimiento
+        </div>
+        <div class="area-opcion" data-value="Cocina" onclick="seleccionarArea(this)">
+          <div class="area-icono" style="background:#E74C3C">
+            <svg viewBox="0 0 24 24"><path d="M12 2c0 0-4 4-4 8a4 4 0 0 0 8 0c0-4-4-8-4-8z"/><path d="M12 14v8"/><path d="M9 18h6"/></svg>
+          </div>
+          Cocina
+        </div>
+        <div class="area-opcion" data-value="Limpieza" onclick="seleccionarArea(this)">
+          <div class="area-icono" style="background:#3498DB">
+            <svg viewBox="0 0 24 24"><path d="m3 3 3 9"/><path d="M6 12h13l-3 7H9l-3-7z"/><path d="M8 12V7h8v5"/></svg>
+          </div>
+          Limpieza
+        </div>
+        <div class="area-opcion" data-value="Sistemas" onclick="seleccionarArea(this)">
+          <div class="area-icono" style="background:#9B59B6">
+            <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          </div>
+          Sistemas
+        </div>
+        <div class="area-sin-resultados" id="areaSinResultados">Sin resultados</div>
+      </div>
+    </div>
+    <input type="hidden" id="campo-area" value="">
   </div>
 
   <div class="field-group">
@@ -856,6 +919,69 @@
     }
   }
 
+  // ---- DROPDOWN AREA ----
+  function toggleDropdownArea() {
+    const lista = document.getElementById('areaLista');
+    lista.classList.contains('open') ? cerrarDropdownArea() : abrirDropdownArea();
+  }
+
+  function abrirDropdownArea() {
+    document.getElementById('areaLista').classList.add('open');
+    document.getElementById('areaArrow').classList.add('open');
+    document.getElementById('campo-area-texto').removeAttribute('readonly');
+  }
+
+  function cerrarDropdownArea() {
+    document.getElementById('areaLista').classList.remove('open');
+    document.getElementById('areaArrow').classList.remove('open');
+    document.getElementById('campo-area-texto').setAttribute('readonly', true);
+    const val = document.getElementById('campo-area').value;
+    if (!val) document.getElementById('campo-area-texto').value = '';
+  }
+
+  function filtrarAreas() {
+    const texto = document.getElementById('campo-area-texto').value.toLowerCase();
+    let visibles = 0;
+    document.querySelectorAll('.area-opcion').forEach(op => {
+      const match = op.dataset.value.toLowerCase().includes(texto);
+      op.classList.toggle('oculto', !match);
+      if (match) visibles++;
+    });
+    document.getElementById('areaSinResultados').style.display = visibles === 0 ? 'block' : 'none';
+  }
+
+  function seleccionarArea(el) {
+    const valor = el.dataset.value;
+    document.getElementById('campo-area').value = valor;
+    document.getElementById('campo-area-texto').value = valor;
+    document.querySelectorAll('.area-opcion').forEach(o => o.classList.remove('seleccionado'));
+    el.classList.add('seleccionado');
+    cerrarDropdownArea();
+  }
+
+  document.addEventListener('click', function(e) {
+    if (!document.getElementById('areaCombo').contains(e.target)) cerrarDropdownArea();
+  });
+
+  document.getElementById('campo-area-texto').addEventListener('keydown', function(e) {
+    const visibles = Array.from(document.querySelectorAll('.area-opcion:not(.oculto)'));
+    const keyHover = document.querySelector('.area-opcion.key-hover');
+    let idx = visibles.indexOf(keyHover);
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (keyHover) keyHover.classList.remove('key-hover');
+      (visibles[idx + 1] || visibles[0])?.classList.add('key-hover');
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (keyHover) keyHover.classList.remove('key-hover');
+      (visibles[idx - 1] || visibles[visibles.length - 1])?.classList.add('key-hover');
+    } else if (e.key === 'Enter' && keyHover) {
+      e.preventDefault(); seleccionarArea(keyHover);
+    } else if (e.key === 'Escape') {
+      cerrarDropdownArea();
+    }
+  });
+
   function limpiarFormulario() {
     photoBase64 = null;
     estadoSeleccionado = '';
@@ -866,6 +992,8 @@
     zone.classList.remove('has-photo');
     zone.onclick = () => abrirGaleria();
     document.getElementById('campo-area').value = '';
+    document.getElementById('campo-area-texto').value = '';
+    document.querySelectorAll('.area-opcion').forEach(o => o.classList.remove('seleccionado'));
     document.getElementById('campo-subarea').value = '';
     document.getElementById('campo-descripcion').value = '';
     document.getElementById('campo-responsable').value = '';
