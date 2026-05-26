@@ -191,7 +191,7 @@ function formatearCabeceras(hoja) {
   hoja.setColumnWidth(7, 90);   // Latitud
   hoja.setColumnWidth(8, 90);   // Longitud
   hoja.setColumnWidth(9, 170);  // Foto
-  hoja.setColumnWidth(10, 0);   // ID Drive (oculto)
+  hoja.hideColumns(10);         // ID Drive (oculto)
 }
 
 // =============================================
@@ -257,7 +257,7 @@ function reformatearHoja() {
   const hoja = ss.getSheetByName(HOJA_NOMBRE);
   if (!hoja) { Logger.log('Hoja no encontrada'); return; }
 
-  // Insertar fila de titulo si no existe
+  // Paso 1: Insertar fila de titulo si no existe
   const primerValor = hoja.getRange(1, 1).getValue();
   if (primerValor !== HOTEL_NOMBRE + ' - REGISTRO DE EVIDENCIAS') {
     hoja.insertRowBefore(1);
@@ -273,9 +273,17 @@ function reformatearHoja() {
     hoja.setRowHeight(1, 55);
   }
 
+  // Paso 2: Insertar fila de cabeceras si no existe
+  const segundoValor = hoja.getRange(2, 1).getValue();
+  if (segundoValor !== 'ID') {
+    hoja.insertRowBefore(2);
+    hoja.getRange(2, 1, 1, CABECERAS.length).setValues([CABECERAS]);
+  }
+
+  // Paso 3: Formatear cabeceras y columnas
   formatearCabeceras(hoja);
 
-  // Reformatear filas de datos existentes
+  // Paso 4: Reformatear filas de datos existentes (desde fila 3)
   const ultimaFila = hoja.getLastRow();
   for (let i = 3; i <= ultimaFila; i++) {
     hoja.setRowHeight(i, 110);
@@ -283,11 +291,11 @@ function reformatearHoja() {
       .setVerticalAlignment('middle')
       .setFontSize(10)
       .setBorder(true, true, true, true, false, false, '#CCCCCC', SpreadsheetApp.BorderStyle.SOLID);
-    if (i % 2 === 0) hoja.getRange(i, 1, 1, CABECERAS.length).setBackground('#F7F9FC');
+    if (i % 2 !== 0) hoja.getRange(i, 1, 1, CABECERAS.length).setBackground('#F7F9FC');
     const estado = hoja.getRange(i, 5).getValue();
     if (estado) colorearEstado(hoja, i, estado);
   }
 
-  hoja.setColumnWidth(10, 0);
+  hoja.hideColumns(10);
   Logger.log('Hoja reformateada correctamente');
 }
