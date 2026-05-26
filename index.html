@@ -540,14 +540,6 @@
   <!-- CAMPOS DEL FORMULARIO -->
   <div class="field-group">
     <div class="field-label">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      Responsable
-    </div>
-    <input class="field-input" id="campo-responsable" type="text" placeholder="Nombre del responsable">
-  </div>
-
-  <div class="field-group">
-    <div class="field-label">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
       Area / Zona
     </div>
@@ -568,12 +560,46 @@
 
   <div class="field-group">
     <div class="field-label">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      Descripcion del Hallazgo
+    </div>
+    <textarea class="field-textarea" id="campo-descripcion" placeholder="Describe el hallazgo o condicion observada..."></textarea>
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Responsable
+    </div>
+    <input class="field-input" id="campo-responsable" type="text" placeholder="Nombre del responsable">
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Departamento
+    </div>
+    <select class="field-select" id="campo-departamento">
+      <option value="">Seleccionar departamento...</option>
+      <option>AYB</option>
+      <option>Housekeeping</option>
+      <option>Mantenimiento</option>
+      <option>Recepcion</option>
+      <option>Cocina</option>
+      <option>Administracion</option>
+      <option>Seguridad</option>
+      <option>Otro</option>
+    </select>
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-      Estado de la evidencia
+      Estado
     </div>
     <div class="estado-grid">
-      <label class="estado-chip" id="chip-ok" onclick="selEstado('OK','ok')">
-        <input type="radio" name="estado" value="OK">
+      <label class="estado-chip" id="chip-ok" onclick="selEstado('Conforme','ok')">
+        <input type="radio" name="estado" value="Conforme">
         <span class="chip-dot" style="background:#1A7F54"></span>
         Conforme
       </label>
@@ -593,29 +619,6 @@
         Informativo
       </label>
     </div>
-  </div>
-
-  <div class="field-group">
-    <div class="field-label">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-      Observacion
-      <span class="optional">(opcional)</span>
-    </div>
-    <textarea class="field-textarea" id="campo-obs" placeholder="Describe el hallazgo, condicion observada o detalle relevante..."></textarea>
-  </div>
-
-  <!-- UBICACION -->
-  <div class="section-label">
-    <svg viewBox="0 0 24 24" fill="currentColor" style="width:14px;height:14px"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
-    Ubicacion GPS
-  </div>
-
-  <div class="ubicacion-bar" onclick="obtenerUbicacion()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-    </svg>
-    <span class="ubicacion-text" id="ubicacion-text">Toca para capturar ubicacion</span>
-    <span class="ubicacion-badge" id="ubicacion-badge" style="display:none">GPS</span>
   </div>
 
   <!-- BARRA PROGRESO -->
@@ -789,9 +792,13 @@
     if (!photoBase64) { mostrarToast('Debes agregar una foto de evidencia', 'error'); return; }
     if (!estadoSeleccionado) { mostrarToast('Selecciona el estado de la evidencia', 'error'); return; }
 
-    const responsable = document.getElementById('campo-responsable').value.trim();
-    const area = document.getElementById('campo-area').value;
-    const observacion = document.getElementById('campo-obs').value.trim();
+    const area         = document.getElementById('campo-area').value;
+    const descripcion  = document.getElementById('campo-descripcion').value.trim();
+    const responsable  = document.getElementById('campo-responsable').value.trim();
+    const departamento = document.getElementById('campo-departamento').value;
+
+    if (!area)         { mostrarToast('Selecciona el area', 'error'); return; }
+    if (!departamento) { mostrarToast('Selecciona el departamento', 'error'); return; }
 
     const btn = document.getElementById('btnEnviar');
     btn.disabled = true;
@@ -802,12 +809,11 @@
 
     const payload = {
       fecha,
-      responsable,
       area,
+      descripcion,
+      responsable,
+      departamento,
       estado: estadoSeleccionado,
-      observacion,
-      latitud: latLon ? latLon.lat : '',
-      longitud: latLon ? latLon.lon : '',
       foto: photoBase64
     };
 
@@ -839,19 +845,16 @@
   function limpiarFormulario() {
     photoBase64 = null;
     estadoSeleccionado = '';
-    latLon = null;
     document.getElementById('preview-img').style.display = 'none';
     document.getElementById('photoPlaceholder').style.display = 'block';
     document.getElementById('photoBadge').style.display = 'none';
     const zone = document.getElementById('photoZone');
     zone.classList.remove('has-photo');
     zone.onclick = () => abrirGaleria();
-    document.getElementById('campo-responsable').value = '';
     document.getElementById('campo-area').value = '';
-    document.getElementById('campo-obs').value = '';
-    document.getElementById('ubicacion-text').textContent = 'Toca para capturar ubicacion';
-    document.getElementById('ubicacion-text').classList.remove('loaded');
-    document.getElementById('ubicacion-badge').style.display = 'none';
+    document.getElementById('campo-descripcion').value = '';
+    document.getElementById('campo-responsable').value = '';
+    document.getElementById('campo-departamento').value = '';
     document.getElementById('fileInput').value = '';
     ['ok','mal','pend','info'].forEach(t => {
       document.getElementById('chip-' + t).className = 'estado-chip';
