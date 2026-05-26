@@ -5,7 +5,7 @@
 
 const SPREADSHEET_ID = '1QtJ6JWHAW29eNOVBsnszKj5c2teiFk4KoRXT91-z6DY';
 const CARPETA_NOMBRE = 'Evidencias Fotograficas';
-const HOTEL_NOMBRE   = 'HOTEL ELIZABETH';
+const HOTEL_NOMBRE   = 'Swissotel Lima Peru';
 
 const MESES = [
   'Enero','Febrero','Marzo','Abril','Mayo','Junio',
