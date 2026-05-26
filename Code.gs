@@ -46,7 +46,8 @@ function doPost(e) {
     const fotoInfo = guardarFotoEnDrive(p.foto);
     const id = guardarEnSheets({
       fecha:        p.fecha || new Date().toLocaleString('es-PE'),
-      area:         p.area || '',
+      area:         p.area || 'General',
+      subarea:      p.subarea || '',
       descripcion:  p.descripcion || '',
       responsable:  p.responsable || '',
       departamento: p.departamento || '',
@@ -99,9 +100,9 @@ function guardarEnSheets(datos) {
 
   const id = generarId();
 
-  // Columnas: AREA | DESC HALLAZGO | FOTO | RESPONSABLE | DEPTO | COMENTARIO | FOTO_LEV | ESTADO | ID | FECHA
+  // Columnas: AREA(subarea) | DESC HALLAZGO | FOTO | RESPONSABLE | DEPTO | COMENTARIO | FOTO_LEV | ESTADO | ID | FECHA
   hoja.appendRow([
-    datos.area,
+    datos.subarea,      // columna AREA = sub area
     datos.descripcion,
     datos.urlFoto,      // se reemplaza por IMAGE() abajo
     datos.responsable,
