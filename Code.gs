@@ -5,7 +5,7 @@
 
 const SPREADSHEET_ID = '1QtJ6JWHAW29eNOVBsnszKj5c2teiFk4KoRXT91-z6DY';
 const CARPETA_NOMBRE = 'Evidencias Fotograficas';
-const HOTEL_NOMBRE   = 'HOTEL ELIZABETH';
+const HOTEL_NOMBRE   = 'Swissotel Lima Peru';
 
 const MESES = [
   'Enero','Febrero','Marzo','Abril','Mayo','Junio',
@@ -208,7 +208,20 @@ function onEdit(e) {
   const hoja = e.source.getActiveSheet();
   if (e.range.getRow() === FILA_FILTRO && e.range.getColumn() === 2) {
     aplicarFiltroMes(hoja);
+    actualizarTitulo(hoja);
   }
+}
+
+// =============================================
+// Actualiza el titulo segun el mes seleccionado
+// =============================================
+function actualizarTitulo(hoja) {
+  const mes = hoja.getRange(FILA_FILTRO, 2).getValue();
+  const anio = new Date().getFullYear();
+  const titulo = mes === 'Todos'
+    ? HOTEL_NOMBRE + ' - WALK THROUGH - ' + anio
+    : HOTEL_NOMBRE + ' - WALK THROUGH - ' + mes.toUpperCase() + ' ' + anio;
+  hoja.getRange(FILA_TITULO, 1).setValue(titulo);
 }
 
 // =============================================
