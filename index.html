@@ -554,6 +554,24 @@
 
   <div class="field-group">
     <div class="field-label">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
+      Sub Area
+    </div>
+    <select class="field-select" id="campo-subarea">
+      <option value="">Seleccionar sub area...</option>
+      <option>Banquetes</option>
+      <option>Cocina Fria</option>
+      <option>Pasteleria</option>
+      <option>Cocina Le Cafe</option>
+      <option>Desinfeccion de Frutas y Verduras</option>
+      <option>Zona de Ingreso de Materia Prima</option>
+      <option>Zona de Residuos</option>
+      <option>Bodega Principal del Chef</option>
+    </select>
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
       Descripcion del Hallazgo
     </div>
@@ -787,12 +805,13 @@
     if (!estadoSeleccionado) { mostrarToast('Selecciona el estado de la evidencia', 'error'); return; }
 
     const area         = document.getElementById('campo-area').value;
+    const subarea      = document.getElementById('campo-subarea').value;
     const descripcion  = document.getElementById('campo-descripcion').value.trim();
     const responsable  = document.getElementById('campo-responsable').value.trim();
     const departamento = document.getElementById('campo-departamento').value;
 
-    if (!area)         { mostrarToast('Selecciona el area', 'error'); return; }
-    if (!departamento) { mostrarToast('Selecciona el departamento', 'error'); return; }
+    if (!area)    { mostrarToast('Selecciona el area', 'error'); return; }
+    if (!subarea) { mostrarToast('Selecciona la sub area', 'error'); return; }
 
     const btn = document.getElementById('btnEnviar');
     btn.disabled = true;
@@ -804,6 +823,7 @@
     const payload = {
       fecha,
       area,
+      subarea,
       descripcion,
       responsable,
       departamento,
@@ -846,6 +866,7 @@
     zone.classList.remove('has-photo');
     zone.onclick = () => abrirGaleria();
     document.getElementById('campo-area').value = '';
+    document.getElementById('campo-subarea').value = '';
     document.getElementById('campo-descripcion').value = '';
     document.getElementById('campo-responsable').value = '';
     document.getElementById('campo-departamento').value = '';
