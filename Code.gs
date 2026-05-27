@@ -37,6 +37,22 @@ const COL_FECHA        = 10;
 // =============================================
 function doOptions(e) { return buildResponse({}); }
 
+function doGet(e) {
+  try {
+    const action = (e && e.parameter && e.parameter.action) ? e.parameter.action : '';
+    if (action === 'exportExcel') {
+      const tipo = (e.parameter.tipo || 'completo').toLowerCase(); // completo|dia|mes
+      const fecha = e.parameter.fecha || '';
+      const mes = e.parameter.mes || '';
+      const out = exportarInformeExcel({ tipo, fecha, mes });
+      return buildResponse({ resultado: 'ok', ...out });
+    }
+    return buildResponse({ resultado: 'ok', mensaje: 'Servicio activo' });
+  } catch (err) {
+    return buildResponse({ resultado: 'error', error: err.message });
+  }
+}
+
 // =============================================
 // POST
 // =============================================
@@ -281,6 +297,103 @@ function buildResponse(data) {
   const out = ContentService.createTextOutput(JSON.stringify(data));
   out.setMimeType(ContentService.MimeType.JSON);
   return out;
+}
+
+// =============================================
+// EXPORTAR EXCEL (idéntico a base de datos)
+// =============================================
+function exportarInformeExcel(opts) {
+  const ssOrigen = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const marca = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyyMMdd_HHmmss');
+  const nombreCopia = 'Informe_Evidencias_' + marca;
+  const archivoOrigen = DriveApp.getFileById(SPREADSHEET_ID);
+  const archivoCopia = archivoOrigen.makeCopy(nombreCopia);
+  const ssCopia = SpreadsheetApp.openById(archivoCopia.getId());
+
+  if (opts.tipo === 'dia' || opts.tipo === 'mes') {
+    filtrarCopiaParaExportacion(ssCopia, opts);
+  }
+
+  const blob = exportarBlobXlsx(ssCopia.getId(), nombreCopia + '.xlsx');
+  const archivoXlsx = DriveApp.createFile(blob);
+  archivoXlsx.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+  // Limpieza copia temporal del spreadsheet
+  archivoCopia.setTrashed(true);
+
+  return {
+    nombre: archivoXlsx.getName(),
+    url: archivoXlsx.getUrl(),
+    tipo: opts.tipo
+  };
+}
+
+function exportarBlobXlsx(spreadsheetId, nombreArchivo) {
+  // Opción 1: Advanced Drive Service (evita scope external_request)
+  try {
+    const blobDrive = Drive.Files.export(
+      spreadsheetId,
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    return blobDrive.setName(nombreArchivo);
+  } catch (errDrive) {
+    // Opción 2: fallback con UrlFetchApp
+    try {
+      const urlExport = 'https://docs.google.com/spreadsheets/d/' + spreadsheetId + '/export?format=xlsx';
+      const token = ScriptApp.getOAuthToken();
+      const resp = UrlFetchApp.fetch(urlExport, {
+        headers: { Authorization: 'Bearer ' + token },
+        muteHttpExceptions: true
+      });
+      if (resp.getResponseCode() !== 200) {
+        throw new Error('Código: ' + resp.getResponseCode());
+      }
+      return resp.getBlob().setName(nombreArchivo);
+    } catch (errFetch) {
+      throw new Error(
+        'No se pudo exportar Excel. Autoriza permisos del script y vuelve a desplegar. ' +
+        'Si persiste, habilita Advanced Drive Service (Drive API). Detalle: ' + errFetch.message
+      );
+    }
+  }
+}
+
+function filtrarCopiaParaExportacion(ss, opts) {
+  const hojas = ss.getSheets();
+  const tz = Session.getScriptTimeZone();
+  const hoy = new Date();
+  const fechaObjetivo = opts.fecha || Utilities.formatDate(hoy, tz, 'yyyy-MM-dd');
+  const mesObjetivo = opts.mes || Utilities.formatDate(hoy, tz, 'yyyy-MM');
+
+  hojas.forEach(hoja => {
+    const ultima = hoja.getLastRow();
+    if (ultima < FILA_DATOS) return;
+    hoja.showRows(FILA_DATOS, ultima - FILA_DATOS + 1);
+
+    for (let i = FILA_DATOS; i <= ultima; i++) {
+      const raw = hoja.getRange(i, COL_FECHA).getValue();
+      if (!raw) {
+        hoja.hideRows(i);
+        continue;
+      }
+
+      let fecha = raw instanceof Date ? raw : new Date(raw);
+      if (!(fecha instanceof Date) || isNaN(fecha.getTime())) {
+        const texto = String(raw);
+        const p = texto.split(' ')[0].split('/');
+        if (p.length === 3) fecha = new Date(Number(p[2]), Number(p[1]) - 1, Number(p[0]));
+      }
+      if (!(fecha instanceof Date) || isNaN(fecha.getTime())) {
+        hoja.hideRows(i);
+        continue;
+      }
+
+      const ymd = Utilities.formatDate(fecha, tz, 'yyyy-MM-dd');
+      const ym = Utilities.formatDate(fecha, tz, 'yyyy-MM');
+      const visible = opts.tipo === 'dia' ? (ymd === fechaObjetivo) : (ym === mesObjetivo);
+      if (!visible) hoja.hideRows(i);
+    }
+  });
 }
 
 // =============================================
