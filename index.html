@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Control de Evidencias</title>
+<link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/1828/1828884.png">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -542,8 +543,8 @@
 <header class="app-header">
   <div class="header-icon">
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 15.2A3.2 3.2 0 1 0 12 8.8a3.2 3.2 0 0 0 0 6.4z"/>
-      <path d="M9 2L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2h-3.17L15 2H9zm3 15c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+      <path d="M12 2l2.6 2.8 3.8-.3.9 3.7 3.3 1.9-1.9 3.3.9 3.7-3.8.3L12 22l-2.6-2.8-3.8.3-.9-3.7L1.4 13l3.3-1.9-.9-3.7 3.8-.3L12 2z"/>
+      <path d="M8.2 12.2l2.4 2.4 5-5" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>
   </div>
   <div>
@@ -786,6 +787,21 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><rect x="9" y="14" width="6" height="7"/><line x1="12" y1="9" x2="12" y2="11"/></svg>
           </div>Gran Salon 3
         </div>
+        <div class="area-opcion" data-value="Foyr Comercial" onclick="seleccionarSubarea(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#7F00FF,#E100FF);box-shadow:0 4px 10px rgba(127,0,255,.45),inset 0 1px 0 rgba(255,255,255,.3)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><rect x="9" y="14" width="6" height="7"/></svg>
+          </div>Foyr Comercial
+        </div>
+        <div class="area-opcion" data-value="Foyer Gran Salon" onclick="seleccionarSubarea(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#2b5876,#4e4376);box-shadow:0 4px 10px rgba(78,67,118,.45),inset 0 1px 0 rgba(255,255,255,.3)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><rect x="9" y="14" width="6" height="7"/></svg>
+          </div>Foyer Gran Salon
+        </div>
+        <div class="area-opcion" data-value="Area Comercial" onclick="seleccionarSubarea(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#00B4DB,#0083B0);box-shadow:0 4px 10px rgba(0,131,176,.45),inset 0 1px 0 rgba(255,255,255,.3)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><rect x="9" y="14" width="6" height="7"/></svg>
+          </div>Area Comercial
+        </div>
 
         <div class="area-sin-resultados" id="subareaSinResultados">Sin resultados</div>
       </div>
@@ -806,7 +822,25 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Responsable
     </div>
-    <input class="field-input" id="campo-responsable" type="text" placeholder="Nombre del responsable">
+    <div class="area-combo" id="responsableCombo">
+      <div class="area-search-wrap">
+        <input class="field-input" id="campo-responsable-texto" type="text"
+               placeholder="Selecciona responsable..."
+               oninput="filtrarResponsables()" onfocus="abrirDropdownResponsable()" readonly
+               onclick="toggleDropdownResponsable()">
+        <svg class="area-arrow" id="responsableArrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="area-lista" id="responsableLista" style="max-height:280px;overflow-y:auto">
+        <div class="area-opcion" data-value="Juan Lopez" onclick="seleccionarResponsable(this)"><div class="sa-icono" style="background:linear-gradient(135deg,#6A11CB,#2575FC);box-shadow:0 4px 10px rgba(37,117,252,.4),inset 0 1px 0 rgba(255,255,255,.3)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 22c1.8-4 5-6 8-6s6.2 2 8 6"/></svg></div>Juan Lopez</div>
+        <div class="area-opcion" data-value="Paola Roman" onclick="seleccionarResponsable(this)"><div class="sa-icono" style="background:linear-gradient(135deg,#FF512F,#DD2476);box-shadow:0 4px 10px rgba(221,36,118,.4),inset 0 1px 0 rgba(255,255,255,.3)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 22c1.8-4 5-6 8-6s6.2 2 8 6"/></svg></div>Paola Roman</div>
+        <div class="area-opcion" data-value="Melanie" onclick="seleccionarResponsable(this)"><div class="sa-icono" style="background:linear-gradient(135deg,#11998E,#38EF7D);box-shadow:0 4px 10px rgba(17,153,142,.4),inset 0 1px 0 rgba(255,255,255,.3)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 22c1.8-4 5-6 8-6s6.2 2 8 6"/></svg></div>Melanie</div>
+        <div class="area-opcion" data-value="Elizabeht" onclick="seleccionarResponsable(this)"><div class="sa-icono" style="background:linear-gradient(135deg,#F7971E,#FFD200);box-shadow:0 4px 10px rgba(247,151,30,.45),inset 0 1px 0 rgba(255,255,255,.3)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 22c1.8-4 5-6 8-6s6.2 2 8 6"/></svg></div>Elizabeht</div>
+        <div class="area-opcion" data-value="Orlando" onclick="seleccionarResponsable(this)"><div class="sa-icono" style="background:linear-gradient(135deg,#396afc,#2948ff);box-shadow:0 4px 10px rgba(41,72,255,.45),inset 0 1px 0 rgba(255,255,255,.3)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 22c1.8-4 5-6 8-6s6.2 2 8 6"/></svg></div>Orlando</div>
+        <div class="area-opcion" data-value="Alvaro Medina" onclick="seleccionarResponsable(this)"><div class="sa-icono" style="background:linear-gradient(135deg,#8E2DE2,#4A00E0);box-shadow:0 4px 10px rgba(74,0,224,.45),inset 0 1px 0 rgba(255,255,255,.3)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 22c1.8-4 5-6 8-6s6.2 2 8 6"/></svg></div>Alvaro Medina</div>
+        <div class="area-sin-resultados" id="responsableSinResultados">Sin resultados</div>
+      </div>
+    </div>
+    <input type="hidden" id="campo-responsable" value="">
   </div>
 
   <div class="field-group">
@@ -1186,10 +1220,45 @@
     cerrarDropdownSubarea();
   }
 
+  function toggleDropdownResponsable() {
+    const lista = document.getElementById('responsableLista');
+    lista.classList.contains('open') ? cerrarDropdownResponsable() : abrirDropdownResponsable();
+  }
+  function abrirDropdownResponsable() {
+    document.getElementById('responsableLista').classList.add('open');
+    document.getElementById('responsableArrow').classList.add('open');
+    document.getElementById('campo-responsable-texto').removeAttribute('readonly');
+  }
+  function cerrarDropdownResponsable() {
+    document.getElementById('responsableLista').classList.remove('open');
+    document.getElementById('responsableArrow').classList.remove('open');
+    document.getElementById('campo-responsable-texto').setAttribute('readonly', true);
+    if (!document.getElementById('campo-responsable').value)
+      document.getElementById('campo-responsable-texto').value = '';
+  }
+  function filtrarResponsables() {
+    const texto = document.getElementById('campo-responsable-texto').value.toLowerCase();
+    let visibles = 0;
+    document.querySelectorAll('#responsableLista .area-opcion').forEach(op => {
+      const ok = op.dataset.value.toLowerCase().includes(texto);
+      op.classList.toggle('oculto', !ok);
+      if (ok) visibles++;
+    });
+    document.getElementById('responsableSinResultados').style.display = visibles === 0 ? 'block' : 'none';
+  }
+  function seleccionarResponsable(el) {
+    document.getElementById('campo-responsable').value = el.dataset.value;
+    document.getElementById('campo-responsable-texto').value = el.dataset.value;
+    document.querySelectorAll('#responsableLista .area-opcion').forEach(o => o.classList.remove('seleccionado'));
+    el.classList.add('seleccionado');
+    cerrarDropdownResponsable();
+  }
+
   document.addEventListener('click', function(e) {
     if (!document.getElementById('areaCombo').contains(e.target)) cerrarDropdownArea();
     if (!document.getElementById('deptoCombo').contains(e.target)) cerrarDropdownDepto();
     if (!document.getElementById('subareaCombo').contains(e.target)) cerrarDropdownSubarea();
+    if (!document.getElementById('responsableCombo').contains(e.target)) cerrarDropdownResponsable();
   });
 
   // ---- MULTI-SELECT DEPARTAMENTO ----
@@ -1281,6 +1350,8 @@
     document.querySelectorAll('#subareaLista .area-opcion').forEach(o => o.classList.remove('seleccionado'));
     document.getElementById('campo-descripcion').value = '';
     document.getElementById('campo-responsable').value = '';
+    document.getElementById('campo-responsable-texto').value = '';
+    document.querySelectorAll('#responsableLista .area-opcion').forEach(o => o.classList.remove('seleccionado'));
     document.getElementById('campo-departamento').value = '';
     deptosSeleccionados = [];
     document.querySelectorAll('.depto-opcion').forEach(o => o.classList.remove('checked'));
