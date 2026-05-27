@@ -42,10 +42,12 @@ function doGet(e) {
   try {
     const action = (e && e.parameter && e.parameter.action) ? e.parameter.action : '';
     if (action === 'exportExcel') {
-      const tipo = (e.parameter.tipo || 'completo').toLowerCase(); // completo|dia|mes
+      const tipo = (e.parameter.tipo || 'completo').toLowerCase(); // completo|dia|mes|rango
       const fecha = e.parameter.fecha || '';
       const mes = e.parameter.mes || '';
-      const out = exportarInformeExcel({ tipo, fecha, mes });
+      const desde = e.parameter.desde || '';
+      const hasta = e.parameter.hasta || '';
+      const out = exportarInformeExcel({ tipo, fecha, mes, desde, hasta });
       return buildResponse({ resultado: 'ok', ...out });
     }
     return buildResponse({ resultado: 'ok', mensaje: 'Servicio activo' });
@@ -313,7 +315,7 @@ function exportarInformeExcel(opts) {
   const archivoCopia = archivoOrigen.makeCopy(nombreCopia);
   const ssCopia = SpreadsheetApp.openById(archivoCopia.getId());
 
-  if (opts.tipo === 'dia' || opts.tipo === 'mes') {
+  if (opts.tipo === 'dia' || opts.tipo === 'mes' || opts.tipo === 'rango') {
     filtrarCopiaParaExportacion(ssCopia, opts);
   }
 
@@ -347,6 +349,8 @@ function filtrarCopiaParaExportacion(ss, opts) {
   const hoy = new Date();
   const fechaObjetivo = opts.fecha || Utilities.formatDate(hoy, tz, 'yyyy-MM-dd');
   const mesObjetivo = opts.mes || Utilities.formatDate(hoy, tz, 'yyyy-MM');
+  const desdeDate = opts.desde ? new Date(opts.desde + 'T00:00:00') : null;
+  const hastaDate = opts.hasta ? new Date(opts.hasta + 'T23:59:59') : null;
 
   hojas.forEach(hoja => {
     const ultima = hoja.getLastRow();
@@ -355,10 +359,7 @@ function filtrarCopiaParaExportacion(ss, opts) {
 
     for (let i = FILA_DATOS; i <= ultima; i++) {
       const raw = hoja.getRange(i, COL_FECHA).getValue();
-      if (!raw) {
-        hoja.hideRows(i);
-        continue;
-      }
+      if (!raw) { hoja.hideRows(i); continue; }
 
       let fecha = raw instanceof Date ? raw : new Date(raw);
       if (!(fecha instanceof Date) || isNaN(fecha.getTime())) {
@@ -366,14 +367,15 @@ function filtrarCopiaParaExportacion(ss, opts) {
         const p = texto.split(' ')[0].split('/');
         if (p.length === 3) fecha = new Date(Number(p[2]), Number(p[1]) - 1, Number(p[0]));
       }
-      if (!(fecha instanceof Date) || isNaN(fecha.getTime())) {
-        hoja.hideRows(i);
-        continue;
-      }
+      if (!(fecha instanceof Date) || isNaN(fecha.getTime())) { hoja.hideRows(i); continue; }
 
       const ymd = Utilities.formatDate(fecha, tz, 'yyyy-MM-dd');
-      const ym = Utilities.formatDate(fecha, tz, 'yyyy-MM');
-      const visible = opts.tipo === 'dia' ? (ymd === fechaObjetivo) : (ym === mesObjetivo);
+      const ym  = Utilities.formatDate(fecha, tz, 'yyyy-MM');
+      let visible;
+      if (opts.tipo === 'dia')   visible = ymd === fechaObjetivo;
+      else if (opts.tipo === 'mes')   visible = ym === mesObjetivo;
+      else if (opts.tipo === 'rango') visible = desdeDate && hastaDate && fecha >= desdeDate && fecha <= hastaDate;
+      else visible = true;
       if (!visible) hoja.hideRows(i);
     }
   });
