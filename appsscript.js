@@ -160,7 +160,7 @@ function inicializarHoja(hoja, area) {
   // Fila 1: Titulo estilo Walk Through
   hoja.appendRow([HOTEL_NOMBRE + ' - WALK THROUGH - ' + mesActual.toUpperCase()]);
   hoja.getRange(FILA_TITULO, 1, 1, 8).merge()
-    .setBackground('#1A3C5E').setFontColor('#FFFFFF')
+    .setBackground('#7B1827').setFontColor('#FFFFFF')
     .setFontWeight('bold').setFontSize(16)
     .setHorizontalAlignment('center').setVerticalAlignment('middle');
   hoja.setRowHeight(FILA_TITULO, 55);
@@ -246,7 +246,7 @@ function actualizarTitulo(hoja) {
 // =============================================
 function formatearCabeceras(hoja) {
   hoja.getRange(FILA_CABECERAS, 1, 1, 8)
-    .setBackground('#1A3C5E').setFontColor('#FFFFFF')
+    .setBackground('#7B1827').setFontColor('#FFFFFF')
     .setFontWeight('bold').setFontSize(11)
     .setHorizontalAlignment('center').setVerticalAlignment('middle')
     .setWrap(true);
@@ -390,7 +390,7 @@ function reformatearHoja() {
       hoja.insertRowBefore(1);
       hoja.getRange(1, 1, 1, 8).merge()
         .setValue(HOTEL_NOMBRE + ' - WALK THROUGH - ' + mesActual.toUpperCase())
-        .setBackground('#1A3C5E').setFontColor('#FFFFFF')
+        .setBackground('#7B1827').setFontColor('#FFFFFF')
         .setFontWeight('bold').setFontSize(16)
         .setHorizontalAlignment('center').setVerticalAlignment('middle');
       hoja.setRowHeight(1, 55);
