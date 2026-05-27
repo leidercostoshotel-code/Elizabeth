@@ -889,6 +889,58 @@
   <div class="field-group">
     <div class="field-label">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Participantes
+    </div>
+    <div class="area-combo" id="partCombo" onclick="toggleDropdownPart()">
+      <div class="area-search-wrap">
+        <div class="field-input depto-display" id="partDisplay" style="min-height:44px;cursor:pointer;display:flex;align-items:center;flex-wrap:wrap;gap:5px;padding:8px 38px 8px 12px;">
+          <span id="partPlaceholder" style="color:var(--muted);font-size:15px">Seleccionar participantes...</span>
+        </div>
+        <svg class="area-arrow" id="partArrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="area-lista" id="partLista">
+        <div style="padding:8px 12px 4px;font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Selecciona uno o más</div>
+        <div class="depto-opcion" data-value="Juan Lopez" data-color="#2575FC" onclick="togglePart(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#6A11CB,#2575FC);box-shadow:0 4px 8px rgba(37,117,252,.35),inset 0 1px 0 rgba(255,255,255,.3)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 22c1.8-4 5-6 8-6s6.2 2 8 6"/></svg></div>
+          <span style="flex:1">Juan Lopez</span>
+          <div class="depto-check" id="pchk-JuanLopez"></div>
+        </div>
+        <div class="depto-opcion" data-value="Paola Roman" data-color="#DD2476" onclick="togglePart(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#FF512F,#DD2476);box-shadow:0 4px 8px rgba(221,36,118,.35),inset 0 1px 0 rgba(255,255,255,.3)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 22c1.8-4 5-6 8-6s6.2 2 8 6"/></svg></div>
+          <span style="flex:1">Paola Roman</span>
+          <div class="depto-check" id="pchk-PaolaRoman"></div>
+        </div>
+        <div class="depto-opcion" data-value="Melanie" data-color="#11998E" onclick="togglePart(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#11998E,#38EF7D);box-shadow:0 4px 8px rgba(17,153,142,.35),inset 0 1px 0 rgba(255,255,255,.3)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 22c1.8-4 5-6 8-6s6.2 2 8 6"/></svg></div>
+          <span style="flex:1">Melanie</span>
+          <div class="depto-check" id="pchk-Melanie"></div>
+        </div>
+        <div class="depto-opcion" data-value="Elizabeth" data-color="#F7971E" onclick="togglePart(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#F7971E,#FFD200);box-shadow:0 4px 8px rgba(247,151,30,.4),inset 0 1px 0 rgba(255,255,255,.3)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 22c1.8-4 5-6 8-6s6.2 2 8 6"/></svg></div>
+          <span style="flex:1">Elizabeth</span>
+          <div class="depto-check" id="pchk-Elizabeth"></div>
+        </div>
+        <div class="depto-opcion" data-value="Orlando" data-color="#396afc" onclick="togglePart(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#396afc,#2948ff);box-shadow:0 4px 8px rgba(41,72,255,.4),inset 0 1px 0 rgba(255,255,255,.3)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 22c1.8-4 5-6 8-6s6.2 2 8 6"/></svg></div>
+          <span style="flex:1">Orlando</span>
+          <div class="depto-check" id="pchk-Orlando"></div>
+        </div>
+        <div class="depto-opcion" data-value="Alvaro Medina" data-color="#8E2DE2" onclick="togglePart(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#8E2DE2,#6A00C0);box-shadow:0 4px 8px rgba(142,45,226,.4),inset 0 1px 0 rgba(255,255,255,.3)"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 22c1.8-4 5-6 8-6s6.2 2 8 6"/></svg></div>
+          <span style="flex:1">Alvaro Medina</span>
+          <div class="depto-check" id="pchk-AlvaroMedina"></div>
+        </div>
+        <div style="padding:8px 12px">
+          <button onclick="cerrarDropdownPart()" style="width:100%;padding:8px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px">Listo</button>
+        </div>
+      </div>
+    </div>
+    <input type="hidden" id="campo-participantes" value="">
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       Departamento
     </div>
     <div class="area-combo" id="deptoCombo">
@@ -1282,8 +1334,9 @@
     const area         = document.getElementById('campo-area').value;
     const subarea      = document.getElementById('campo-subarea').value;
     const descripcion  = document.getElementById('campo-descripcion').value.trim();
-    const responsable  = document.getElementById('campo-responsable').value.trim();
-    const departamento = document.getElementById('campo-departamento').value;
+    const responsable    = document.getElementById('campo-responsable').value.trim();
+    const participantes  = document.getElementById('campo-participantes').value;
+    const departamento   = document.getElementById('campo-departamento').value;
 
     if (!area)    { mostrarToast('Selecciona el area', 'error'); return; }
     if (!subarea) { mostrarToast('Selecciona la sub area', 'error'); return; }
@@ -1301,6 +1354,7 @@
       subarea,
       descripcion,
       responsable,
+      participantes,
       departamento,
       estado: estadoSeleccionado,
       foto: photoBase64
@@ -1484,6 +1538,7 @@
   document.addEventListener('click', function(e) {
     if (!document.getElementById('areaCombo').contains(e.target)) cerrarDropdownArea();
     if (!document.getElementById('deptoCombo').contains(e.target)) cerrarDropdownDepto();
+    if (!document.getElementById('partCombo').contains(e.target)) cerrarDropdownPart();
     if (!document.getElementById('subareaCombo').contains(e.target)) cerrarDropdownSubarea();
     if (!document.getElementById('responsableCombo').contains(e.target)) cerrarDropdownResponsable();
   });
@@ -1518,6 +1573,45 @@
       el.classList.remove('checked');
     }
     actualizarDisplayDepto();
+  }
+
+  // ---- MULTI-SELECT PARTICIPANTES ----
+  const PART_COLORES = { 'Juan Lopez':'#2575FC', 'Paola Roman':'#DD2476', 'Melanie':'#11998E', 'Elizabeth':'#F7971E', 'Orlando':'#396afc', 'Alvaro Medina':'#8E2DE2' };
+  let partSeleccionados = [];
+
+  function toggleDropdownPart() {
+    const lista = document.getElementById('partLista');
+    lista.classList.contains('open') ? cerrarDropdownPart() : lista.classList.add('open') || document.getElementById('partArrow').classList.add('open');
+  }
+  function cerrarDropdownPart() {
+    document.getElementById('partLista').classList.remove('open');
+    document.getElementById('partArrow').classList.remove('open');
+  }
+  function togglePart(el) {
+    const valor = el.dataset.value;
+    const idx = partSeleccionados.indexOf(valor);
+    if (idx === -1) { partSeleccionados.push(valor); el.classList.add('checked'); }
+    else { partSeleccionados.splice(idx, 1); el.classList.remove('checked'); }
+    actualizarDisplayPart();
+  }
+  function actualizarDisplayPart() {
+    const display = document.getElementById('partDisplay');
+    const placeholder = document.getElementById('partPlaceholder');
+    document.getElementById('campo-participantes').value = partSeleccionados.join(', ');
+    if (partSeleccionados.length === 0) {
+      placeholder.style.display = 'inline';
+      display.querySelectorAll('.depto-tag').forEach(t => t.remove());
+    } else {
+      placeholder.style.display = 'none';
+      display.querySelectorAll('.depto-tag').forEach(t => t.remove());
+      partSeleccionados.forEach(p => {
+        const tag = document.createElement('span');
+        tag.className = 'depto-tag';
+        tag.style.background = PART_COLORES[p] || '#888';
+        tag.textContent = p;
+        display.appendChild(tag);
+      });
+    }
   }
 
   function actualizarDisplayDepto() {
@@ -1579,9 +1673,13 @@
     document.getElementById('campo-responsable').value = '';
     document.getElementById('campo-responsable-texto').value = '';
     document.querySelectorAll('#responsableLista .area-opcion').forEach(o => o.classList.remove('seleccionado'));
+    document.getElementById('campo-participantes').value = '';
+    partSeleccionados = [];
+    document.querySelectorAll('#partLista .depto-opcion').forEach(o => o.classList.remove('checked'));
+    actualizarDisplayPart();
     document.getElementById('campo-departamento').value = '';
     deptosSeleccionados = [];
-    document.querySelectorAll('.depto-opcion').forEach(o => o.classList.remove('checked'));
+    document.querySelectorAll('#deptoLista .depto-opcion').forEach(o => o.classList.remove('checked'));
     actualizarDisplayDepto();
     document.getElementById('fileInput').value = '';
     ['pend','rec','cor'].forEach(t => {
