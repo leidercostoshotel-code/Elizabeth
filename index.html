@@ -288,7 +288,7 @@
   /* ESTADO ACTUAL */
   .estado-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 8px;
     margin-bottom: 20px;
   }
@@ -317,10 +317,9 @@
     flex-shrink: 0;
   }
 
-  .estado-chip.selected-ok { border-color: var(--success); background: var(--success-bg); color: var(--success); }
-  .estado-chip.selected-mal { border-color: var(--error); background: var(--error-bg); color: var(--error); }
-  .estado-chip.selected-pend { border-color: #E67E22; background: #FEF5E7; color: #B7770D; }
-  .estado-chip.selected-info { border-color: var(--primary); background: #EEF4FB; color: var(--primary); }
+  .estado-chip.selected-pend  { border-color: #F59E0B; background: #FEF9C3; color: #92400E; }
+  .estado-chip.selected-rec   { border-color: #EF4444; background: #FEE2E2; color: #B91C1C; }
+  .estado-chip.selected-cor   { border-color: #10B981; background: #D1FAE5; color: #065F46; }
 
   /* UBICACION */
   .ubicacion-bar {
@@ -993,25 +992,20 @@
       Estado
     </div>
     <div class="estado-grid">
-      <label class="estado-chip" id="chip-ok" onclick="selEstado('Conforme','ok')">
-        <input type="radio" name="estado" value="Conforme">
-        <span class="chip-dot" style="background:#1A7F54"></span>
-        Conforme
-      </label>
-      <label class="estado-chip" id="chip-mal" onclick="selEstado('No conforme','mal')">
-        <input type="radio" name="estado" value="No conforme">
-        <span class="chip-dot" style="background:#C0392B"></span>
-        No conforme
-      </label>
       <label class="estado-chip" id="chip-pend" onclick="selEstado('Pendiente','pend')">
         <input type="radio" name="estado" value="Pendiente">
-        <span class="chip-dot" style="background:#E67E22"></span>
+        <span class="chip-dot" style="background:#F59E0B"></span>
         Pendiente
       </label>
-      <label class="estado-chip" id="chip-info" onclick="selEstado('Informativo','info')">
-        <input type="radio" name="estado" value="Informativo">
-        <span class="chip-dot" style="background:#1A3C5E"></span>
-        Informativo
+      <label class="estado-chip" id="chip-rec" onclick="selEstado('Recurrente','rec')">
+        <input type="radio" name="estado" value="Recurrente">
+        <span class="chip-dot" style="background:#EF4444"></span>
+        Recurrente
+      </label>
+      <label class="estado-chip" id="chip-cor" onclick="selEstado('Corregido','cor')">
+        <input type="radio" name="estado" value="Corregido">
+        <span class="chip-dot" style="background:#10B981"></span>
+        Corregido
       </label>
     </div>
   </div>
@@ -1166,7 +1160,7 @@
   // ---- ESTADO ----
   function selEstado(valor, tipo) {
     estadoSeleccionado = valor;
-    ['ok','mal','pend','info'].forEach(t => {
+    ['pend','rec','cor'].forEach(t => {
       document.getElementById('chip-' + t).className = 'estado-chip';
     });
     document.getElementById('chip-' + tipo).className = 'estado-chip selected-' + tipo;
@@ -1524,7 +1518,7 @@
     document.querySelectorAll('.depto-opcion').forEach(o => o.classList.remove('checked'));
     actualizarDisplayDepto();
     document.getElementById('fileInput').value = '';
-    ['ok','mal','pend','info'].forEach(t => {
+    ['pend','rec','cor'].forEach(t => {
       document.getElementById('chip-' + t).className = 'estado-chip';
     });
   }
