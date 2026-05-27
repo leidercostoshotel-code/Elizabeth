@@ -533,6 +533,37 @@
   canvas#snap-canvas { display: none; }
 
   /* RESPONSIVE */
+  @media (max-width: 768px) {
+    body {
+      background-attachment: scroll; /* mejor rendimiento en iOS/Android */
+    }
+    .app-header {
+      padding: 14px 14px 12px;
+    }
+    .app-body {
+      padding: 14px 12px calc(28px + env(safe-area-inset-bottom));
+    }
+    .area-lista {
+      max-height: min(45vh, 320px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .header-title { font-size: 15px; }
+    .header-sub { font-size: 10px; }
+    .photo-zone, #preview-img { min-height: 200px; height: 200px; }
+    .btn-photo {
+      min-height: 44px;
+      padding: 10px 12px;
+      font-size: 12px;
+    }
+    .field-input, .field-textarea, .field-select {
+      font-size: 16px; /* evita zoom automático en iOS */
+    }
+  }
+
   @media (max-width: 360px) {
     .photo-actions { grid-template-columns: 1fr; }
     .estado-grid { grid-template-columns: 1fr; }
