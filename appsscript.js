@@ -24,6 +24,7 @@ const CABECERAS = [
   'DESCRIPCION DE HALLAZGO',
   'REGISTRO FOTOGRAFICO',
   'RESPONSABLE',
+  'PARTICIPANTES',
   'DEPARTAMENTO',
   'Comentario - Respuesta del area responsable',
   'REGISTRO FOTOGRAFICO DEL LEVANTAMIENTO',
@@ -31,8 +32,8 @@ const CABECERAS = [
 ];
 
 // Columnas internas (ocultas)
-const COL_ID_INTERNO   = 9;
-const COL_FECHA        = 10;
+const COL_ID_INTERNO   = 10;
+const COL_FECHA        = 11;
 
 // =============================================
 function doOptions(e) { return buildResponse({}); }
@@ -65,9 +66,10 @@ function doPost(e) {
       area:         p.area || 'General',
       subarea:      p.subarea || '',
       descripcion:  p.descripcion || '',
-      responsable:  p.responsable || '',
-      departamento: p.departamento || '',
-      estado:       p.estado || '',
+      responsable:   p.responsable || '',
+      participantes: p.participantes || '',
+      departamento:  p.departamento || '',
+      estado:        p.estado || '',
       urlFoto:      fotoInfo.url,
       idFoto:       fotoInfo.id
     });
@@ -116,15 +118,16 @@ function guardarEnSheets(datos) {
 
   const id = generarId();
 
-  // Columnas: AREA(subarea) | DESC HALLAZGO | FOTO | RESPONSABLE | DEPTO | COMENTARIO | FOTO_LEV | ESTADO | ID | FECHA
+  // Columnas: AREA | DESC | FOTO | RESPONSABLE | PARTICIPANTES | DEPTO | COMENTARIO | FOTO_LEV | ESTADO | ID | FECHA
   hoja.appendRow([
-    datos.subarea,      // columna AREA = sub area
+    datos.subarea,        // columna AREA = sub area
     datos.descripcion,
-    datos.urlFoto,      // se reemplaza por IMAGE() abajo
+    datos.urlFoto,        // se reemplaza por IMAGE() abajo
     datos.responsable,
+    datos.participantes,
     datos.departamento,
-    '',                 // Comentario - se llena manualmente en el sheet
-    '',                 // Foto levantamiento - se llena manualmente
+    '',                   // Comentario - se llena manualmente en el sheet
+    '',                   // Foto levantamiento - se llena manualmente
     datos.estado,
     id,
     datos.fecha
@@ -137,13 +140,13 @@ function guardarEnSheets(datos) {
   hoja.setRowHeight(fila, 120);
 
   // Formato de la fila
-  hoja.getRange(fila, 1, 1, 8)
+  hoja.getRange(fila, 1, 1, 9)
     .setVerticalAlignment('middle')
     .setFontSize(10)
     .setWrap(true)
     .setBorder(true, true, true, true, true, true, '#CCCCCC', SpreadsheetApp.BorderStyle.SOLID);
 
-  if (fila % 2 !== 0) hoja.getRange(fila, 1, 1, 8).setBackground('#F7F9FC');
+  if (fila % 2 !== 0) hoja.getRange(fila, 1, 1, 9).setBackground('#F7F9FC');
 
   colorearEstado(hoja, fila, datos.estado);
   aplicarFiltroMes(hoja);
@@ -159,7 +162,7 @@ function inicializarHoja(hoja, area) {
 
   // Fila 1: Titulo estilo Walk Through
   hoja.appendRow([HOTEL_NOMBRE + ' - WALK THROUGH - ' + mesActual.toUpperCase()]);
-  hoja.getRange(FILA_TITULO, 1, 1, 8).merge()
+  hoja.getRange(FILA_TITULO, 1, 1, 9).merge()
     .setBackground('#7B1827').setFontColor('#FFFFFF')
     .setFontWeight('bold').setFontSize(16)
     .setHorizontalAlignment('center').setVerticalAlignment('middle');
@@ -191,7 +194,7 @@ function configurarFiltroMes(hoja) {
   hoja.getRange(FILA_FILTRO, 3).setValue('← Selecciona un mes')
     .setFontColor('#AAAAAA').setFontStyle('italic');
 
-  hoja.getRange(FILA_FILTRO, 1, 1, 8).setBackground('#7F8C8D');
+  hoja.getRange(FILA_FILTRO, 1, 1, 9).setBackground('#7F8C8D');
   hoja.setRowHeight(FILA_FILTRO, 35);
 }
 
@@ -245,7 +248,7 @@ function actualizarTitulo(hoja) {
 // Formato cabeceras (fila 3) - identico al Walk Through
 // =============================================
 function formatearCabeceras(hoja) {
-  hoja.getRange(FILA_CABECERAS, 1, 1, 8)
+  hoja.getRange(FILA_CABECERAS, 1, 1, 9)
     .setBackground('#7B1827').setFontColor('#FFFFFF')
     .setFontWeight('bold').setFontSize(11)
     .setHorizontalAlignment('center').setVerticalAlignment('middle')
@@ -253,19 +256,20 @@ function formatearCabeceras(hoja) {
   hoja.setRowHeight(FILA_CABECERAS, 50);
   hoja.setFrozenRows(FILA_CABECERAS);
 
-  // Anchos de columna = Walk Through
+  // Anchos de columna
   hoja.setColumnWidth(1, 140);  // AREA
   hoja.setColumnWidth(2, 220);  // DESCRIPCION DE HALLAZGO
   hoja.setColumnWidth(3, 180);  // REGISTRO FOTOGRAFICO
   hoja.setColumnWidth(4, 130);  // RESPONSABLE
-  hoja.setColumnWidth(5, 130);  // DEPARTAMENTO
-  hoja.setColumnWidth(6, 220);  // COMENTARIO RESPUESTA
-  hoja.setColumnWidth(7, 180);  // FOTO LEVANTAMIENTO
-  hoja.setColumnWidth(8, 110);  // ESTADO
+  hoja.setColumnWidth(5, 160);  // PARTICIPANTES
+  hoja.setColumnWidth(6, 130);  // DEPARTAMENTO
+  hoja.setColumnWidth(7, 220);  // COMENTARIO RESPUESTA
+  hoja.setColumnWidth(8, 180);  // FOTO LEVANTAMIENTO
+  hoja.setColumnWidth(9, 110);  // ESTADO
 
   // Ocultar columnas internas
-  hoja.hideColumns(9);
   hoja.hideColumns(10);
+  hoja.hideColumns(11);
 }
 
 // =============================================
@@ -279,7 +283,7 @@ function colorearEstado(hoja, fila, estado) {
   };
   const c = colores[estado];
   if (c) {
-    hoja.getRange(fila, 8)
+    hoja.getRange(fila, 9)
       .setBackground(c.bg).setFontColor(c.font)
       .setFontWeight('bold').setHorizontalAlignment('center');
   }
@@ -388,7 +392,7 @@ function reformatearHoja() {
 
     if (!v1.includes('WALK THROUGH') && !v1.includes(HOTEL_NOMBRE)) {
       hoja.insertRowBefore(1);
-      hoja.getRange(1, 1, 1, 8).merge()
+      hoja.getRange(1, 1, 1, 9).merge()
         .setValue(HOTEL_NOMBRE + ' - WALK THROUGH - ' + mesActual.toUpperCase())
         .setBackground('#7B1827').setFontColor('#FFFFFF')
         .setFontWeight('bold').setFontSize(16)
@@ -403,7 +407,7 @@ function reformatearHoja() {
 
     if (String(hoja.getRange(3, 1).getValue()) !== 'AREA') {
       hoja.insertRowBefore(3);
-      hoja.getRange(3, 1, 1, 8).setValues([CABECERAS]);
+      hoja.getRange(3, 1, 1, 9).setValues([CABECERAS]);
     }
 
     formatearCabeceras(hoja);
@@ -411,11 +415,11 @@ function reformatearHoja() {
     const ultimaFila = hoja.getLastRow();
     for (let i = FILA_DATOS; i <= ultimaFila; i++) {
       hoja.setRowHeight(i, 120);
-      hoja.getRange(i, 1, 1, 8)
+      hoja.getRange(i, 1, 1, 9)
         .setVerticalAlignment('middle').setFontSize(10).setWrap(true)
         .setBorder(true, true, true, true, true, true, '#CCCCCC', SpreadsheetApp.BorderStyle.SOLID);
-      if (i % 2 !== 0) hoja.getRange(i, 1, 1, 8).setBackground('#F7F9FC');
-      const estado = hoja.getRange(i, 8).getValue();
+      if (i % 2 !== 0) hoja.getRange(i, 1, 1, 9).setBackground('#F7F9FC');
+      const estado = hoja.getRange(i, 9).getValue();
       if (estado) colorearEstado(hoja, i, estado);
     }
 
