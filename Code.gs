@@ -303,6 +303,8 @@ function buildResponse(data) {
 // EXPORTAR EXCEL (idéntico a base de datos)
 // =============================================
 function exportarInformeExcel(opts) {
+  const opciones = opts || {};
+  const tipo = (opciones.tipo || 'completo').toLowerCase();
   const ssOrigen = SpreadsheetApp.openById(SPREADSHEET_ID);
   const marca = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyyMMdd_HHmmss');
   const nombreCopia = 'Informe_Evidencias_' + marca;
@@ -310,8 +312,8 @@ function exportarInformeExcel(opts) {
   const archivoCopia = archivoOrigen.makeCopy(nombreCopia);
   const ssCopia = SpreadsheetApp.openById(archivoCopia.getId());
 
-  if (opts.tipo === 'dia' || opts.tipo === 'mes') {
-    filtrarCopiaParaExportacion(ssCopia, opts);
+  if (tipo === 'dia' || tipo === 'mes') {
+    filtrarCopiaParaExportacion(ssCopia, { ...opciones, tipo });
   }
 
   const urlExport = 'https://docs.google.com/spreadsheets/d/' + ssCopia.getId() + '/export?format=xlsx';
@@ -334,7 +336,7 @@ function exportarInformeExcel(opts) {
   return {
     nombre: archivoXlsx.getName(),
     url: archivoXlsx.getUrl(),
-    tipo: opts.tipo
+    tipo: tipo
   };
 }
 
