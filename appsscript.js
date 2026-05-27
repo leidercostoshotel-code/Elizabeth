@@ -383,18 +383,30 @@ function filtrarCopiaParaExportacion(ss, opts) {
   });
 }
 
-// Convierte =IMAGE("url") a URL de texto para que sea visible en Excel/Office 365
+// Convierte =IMAGE("url") a imagen embebida real para que se exporte en xlsx/Office 365
 function prepararImagenesParaExcel(ss) {
-  const COLS_FOTO = [3, 8]; // REGISTRO FOTOGRAFICO y REGISTRO FOTOGRAFICO DEL LEVANTAMIENTO
+  const COLS_FOTO = [3, 8]; // REGISTRO FOTOGRAFICO y FOTO DEL LEVANTAMIENTO
   ss.getSheets().forEach(hoja => {
     const ultima = hoja.getLastRow();
     if (ultima < FILA_DATOS) return;
     COLS_FOTO.forEach(col => {
       for (let i = FILA_DATOS; i <= ultima; i++) {
-        const formula = hoja.getRange(i, col).getFormula();
+        const cell    = hoja.getRange(i, col);
+        const formula = cell.getFormula();
         if (!formula) continue;
         const match = formula.match(/=IMAGE\("([^"]+)"/i);
-        if (match) hoja.getRange(i, col).setValue(match[1]);
+        if (!match) continue;
+        try {
+          // CellImage embebida: se exporta como imagen real en xlsx
+          const img = SpreadsheetApp.newCellImage()
+            .setSourceUrl(match[1])
+            .setAltTextTitle('Foto evidencia')
+            .build();
+          cell.setValue(img);
+        } catch (e) {
+          // Fallback: si no carga la imagen, dejar la URL como texto clicable
+          cell.setValue(match[1]);
+        }
       }
     });
   });
