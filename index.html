@@ -979,6 +979,11 @@
     Enviar Evidencia
   </button>
 
+  <button class="btn-photo btn-galeria" id="btnDescargar" onclick="descargarInformeExcel()" style="width:100%;margin-top:10px">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Descargar informe Excel
+  </button>
+
 </main>
 
 <!-- TOAST -->
@@ -1213,6 +1218,47 @@
     } finally {
       btn.disabled = false;
       btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px;height:20px"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22,2 15,22 11,13 2,9"/></svg> Enviar Evidencia`;
+    }
+  }
+
+  async function descargarInformeExcel() {
+    const opcion = prompt('Tipo de descarga: completo, dia o mes', 'mes');
+    if (!opcion) return;
+    const tipo = opcion.toLowerCase().trim();
+    if (!['completo', 'dia', 'mes'].includes(tipo)) {
+      mostrarToast('Tipo invalido. Usa: completo, dia o mes', 'error');
+      return;
+    }
+
+    const params = new URLSearchParams({ action: 'exportExcel', tipo });
+    if (tipo === 'dia') {
+      const fecha = prompt('Ingresa fecha (YYYY-MM-DD)', new Date().toISOString().slice(0, 10));
+      if (!fecha) return;
+      params.set('fecha', fecha);
+    } else if (tipo === 'mes') {
+      const mes = prompt('Ingresa mes (YYYY-MM)', new Date().toISOString().slice(0, 7));
+      if (!mes) return;
+      params.set('mes', mes);
+    }
+
+    const btn = document.getElementById('btnDescargar');
+    const prev = btn.innerHTML;
+    btn.disabled = true;
+    btn.textContent = 'Generando Excel...';
+
+    try {
+      const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
+      const data = await res.json();
+      if (data.resultado !== 'ok' || !data.url) {
+        throw new Error(data.error || 'No se pudo generar el archivo');
+      }
+      window.open(data.url, '_blank');
+      mostrarToast('Excel generado correctamente', 'success');
+    } catch (err) {
+      mostrarToast('Error al generar Excel: ' + err.message, 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = prev;
     }
   }
 
