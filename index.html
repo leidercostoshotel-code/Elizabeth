@@ -366,6 +366,15 @@
     padding: 14px; text-align: center; color: var(--muted); font-size: 14px; display: none;
   }
 
+  /* ICONO 3D SUB AREA */
+  .sa-icono {
+    width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .15s;
+  }
+  .area-opcion:hover .sa-icono { transform: scale(1.08) rotate(-3deg); }
+  .sa-icono svg { width: 18px; height: 18px; }
+
   /* MULTI-SELECT DEPARTAMENTO */
   .depto-opcion {
     display: flex; align-items: center; gap: 12px;
@@ -687,24 +696,101 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
       Sub Area
     </div>
-    <select class="field-select" id="campo-subarea">
-      <option value="">Seleccionar sub area...</option>
-      <option>Banquetes</option>
-      <option>Cocina Fria</option>
-      <option>Pasteleria</option>
-      <option>Cocina Le Cafe</option>
-      <option>Desinfeccion de Frutas y Verduras</option>
-      <option>Zona de Ingreso de Materia Prima</option>
-      <option>Zona de Residuos</option>
-      <option>Bodega Principal del Chef</option>
-      <option>Salon Inka</option>
-      <option>Salon Paracas</option>
-      <option>Salon Nazca</option>
-      <option>Gran Salon</option>
-      <option>Gran Salon 1</option>
-      <option>Gran Salon 2</option>
-      <option>Gran Salon 3</option>
-    </select>
+    <div class="area-combo" id="subareaCombo">
+      <div class="area-search-wrap">
+        <input class="field-input" id="campo-subarea-texto" type="text"
+               placeholder="Buscar sub área..." autocomplete="off"
+               oninput="filtrarSubareas()" onfocus="abrirDropdownSubarea()" readonly
+               onclick="toggleDropdownSubarea()">
+        <svg class="area-arrow" id="subareaArrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="area-lista" id="subareaLista" style="max-height:320px;overflow-y:auto">
+
+        <div style="padding:6px 12px 2px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.6px">Cocina & Producción</div>
+
+        <div class="area-opcion" data-value="Banquetes" onclick="seleccionarSubarea(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#F6D365,#FDA085);box-shadow:0 4px 10px rgba(253,160,133,.45),inset 0 1px 0 rgba(255,255,255,.35)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+          </div>Banquetes
+        </div>
+        <div class="area-opcion" data-value="Cocina Fria" onclick="seleccionarSubarea(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#89F7FE,#66A6FF);box-shadow:0 4px 10px rgba(102,166,255,.45),inset 0 1px 0 rgba(255,255,255,.35)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><line x1="12" y1="2" x2="12" y2="22"/><path d="m4.93 4.93 14.14 14.14"/><path d="m19.07 4.93-14.14 14.14"/><line x1="2" y1="12" x2="22" y2="12"/></svg>
+          </div>Cocina Fria
+        </div>
+        <div class="area-opcion" data-value="Pasteleria" onclick="seleccionarSubarea(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#FCCB90,#D57EEB);box-shadow:0 4px 10px rgba(213,126,235,.45),inset 0 1px 0 rgba(255,255,255,.35)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M20 21v-8a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8"/><path d="M4 16s.5-1 2-1 2.5 2 4 2 2.5-2 4-2 2 1 2 1"/><path d="M2 21h20"/><path d="M7 8v2"/><path d="M12 8v2"/><path d="M17 8v2"/><path d="M7 4h.01"/><path d="M12 4h.01"/><path d="M17 4h.01"/></svg>
+          </div>Pasteleria
+        </div>
+        <div class="area-opcion" data-value="Cocina Le Cafe" onclick="seleccionarSubarea(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#C2915A,#6F4E37);box-shadow:0 4px 10px rgba(111,78,55,.45),inset 0 1px 0 rgba(255,255,255,.35)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M17 8h1a4 4 0 1 1 0 8h-1"/><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>
+          </div>Cocina Le Cafe
+        </div>
+        <div class="area-opcion" data-value="Desinfeccion de Frutas y Verduras" onclick="seleccionarSubarea(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#84FAB0,#8FD3F4);box-shadow:0 4px 10px rgba(132,250,176,.5),inset 0 1px 0 rgba(255,255,255,.35)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>Desinfeccion Frutas y Verduras
+        </div>
+        <div class="area-opcion" data-value="Zona de Ingreso de Materia Prima" onclick="seleccionarSubarea(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#FDDB92,#E96D35);box-shadow:0 4px 10px rgba(233,109,53,.45),inset 0 1px 0 rgba(255,255,255,.35)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+          </div>Zona Ingreso Materia Prima
+        </div>
+        <div class="area-opcion" data-value="Zona de Residuos" onclick="seleccionarSubarea(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#4facfe,#00f2fe);box-shadow:0 4px 10px rgba(79,172,254,.45),inset 0 1px 0 rgba(255,255,255,.35)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+          </div>Zona de Residuos
+        </div>
+        <div class="area-opcion" data-value="Bodega Principal del Chef" onclick="seleccionarSubarea(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#A8814A,#5D4037);box-shadow:0 4px 10px rgba(93,64,55,.45),inset 0 1px 0 rgba(255,255,255,.35)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+          </div>Bodega Principal del Chef
+        </div>
+
+        <div style="padding:8px 12px 2px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.6px;border-top:1px solid var(--border);margin-top:4px">Salones & Eventos</div>
+
+        <div class="area-opcion" data-value="Salon Inka" onclick="seleccionarSubarea(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#FF6B6B,#C0392B);box-shadow:0 4px 10px rgba(192,57,43,.45),inset 0 1px 0 rgba(255,255,255,.35)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><rect x="9" y="14" width="6" height="7"/></svg>
+          </div>Salon Inka
+        </div>
+        <div class="area-opcion" data-value="Salon Paracas" onclick="seleccionarSubarea(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#11998E,#38EF7D);box-shadow:0 4px 10px rgba(17,153,142,.45),inset 0 1px 0 rgba(255,255,255,.35)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><rect x="9" y="14" width="6" height="7"/></svg>
+          </div>Salon Paracas
+        </div>
+        <div class="area-opcion" data-value="Salon Nazca" onclick="seleccionarSubarea(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#F7971E,#D35400);box-shadow:0 4px 10px rgba(211,84,0,.45),inset 0 1px 0 rgba(255,255,255,.35)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><rect x="9" y="14" width="6" height="7"/></svg>
+          </div>Salon Nazca
+        </div>
+        <div class="area-opcion" data-value="Gran Salon" onclick="seleccionarSubarea(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#2C3E70,#1A3C5E);box-shadow:0 4px 10px rgba(26,60,94,.55),inset 0 1px 0 rgba(255,255,255,.25)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><rect x="9" y="14" width="6" height="7"/></svg>
+          </div>Gran Salon
+        </div>
+        <div class="area-opcion" data-value="Gran Salon 1" onclick="seleccionarSubarea(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#4CA1AF,#2C3E70);box-shadow:0 4px 10px rgba(44,62,112,.45),inset 0 1px 0 rgba(255,255,255,.3)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><rect x="9" y="14" width="6" height="7"/><line x1="12" y1="9" x2="12" y2="11"/></svg>
+          </div>Gran Salon 1
+        </div>
+        <div class="area-opcion" data-value="Gran Salon 2" onclick="seleccionarSubarea(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#3A7BD5,#1F618D);box-shadow:0 4px 10px rgba(31,97,141,.45),inset 0 1px 0 rgba(255,255,255,.3)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><rect x="9" y="14" width="6" height="7"/><line x1="12" y1="9" x2="12" y2="11"/></svg>
+          </div>Gran Salon 2
+        </div>
+        <div class="area-opcion" data-value="Gran Salon 3" onclick="seleccionarSubarea(this)">
+          <div class="sa-icono" style="background:linear-gradient(135deg,#1565C0,#154360);box-shadow:0 4px 10px rgba(21,67,96,.5),inset 0 1px 0 rgba(255,255,255,.25)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><rect x="9" y="14" width="6" height="7"/><line x1="12" y1="9" x2="12" y2="11"/></svg>
+          </div>Gran Salon 3
+        </div>
+
+        <div class="area-sin-resultados" id="subareaSinResultados">Sin resultados</div>
+      </div>
+    </div>
+    <input type="hidden" id="campo-subarea" value="">
   </div>
 
   <div class="field-group">
@@ -1065,9 +1151,45 @@
     cerrarDropdownArea();
   }
 
+  // ---- DROPDOWN SUB AREA ----
+  function toggleDropdownSubarea() {
+    const lista = document.getElementById('subareaLista');
+    lista.classList.contains('open') ? cerrarDropdownSubarea() : abrirDropdownSubarea();
+  }
+  function abrirDropdownSubarea() {
+    document.getElementById('subareaLista').classList.add('open');
+    document.getElementById('subareaArrow').classList.add('open');
+    document.getElementById('campo-subarea-texto').removeAttribute('readonly');
+  }
+  function cerrarDropdownSubarea() {
+    document.getElementById('subareaLista').classList.remove('open');
+    document.getElementById('subareaArrow').classList.remove('open');
+    document.getElementById('campo-subarea-texto').setAttribute('readonly', true);
+    if (!document.getElementById('campo-subarea').value)
+      document.getElementById('campo-subarea-texto').value = '';
+  }
+  function filtrarSubareas() {
+    const texto = document.getElementById('campo-subarea-texto').value.toLowerCase();
+    let visibles = 0;
+    document.querySelectorAll('#subareaLista .area-opcion').forEach(op => {
+      const match = op.dataset.value.toLowerCase().includes(texto);
+      op.classList.toggle('oculto', !match);
+      if (match) visibles++;
+    });
+    document.getElementById('subareaSinResultados').style.display = visibles === 0 ? 'block' : 'none';
+  }
+  function seleccionarSubarea(el) {
+    document.getElementById('campo-subarea').value = el.dataset.value;
+    document.getElementById('campo-subarea-texto').value = el.dataset.value;
+    document.querySelectorAll('#subareaLista .area-opcion').forEach(o => o.classList.remove('seleccionado'));
+    el.classList.add('seleccionado');
+    cerrarDropdownSubarea();
+  }
+
   document.addEventListener('click', function(e) {
     if (!document.getElementById('areaCombo').contains(e.target)) cerrarDropdownArea();
     if (!document.getElementById('deptoCombo').contains(e.target)) cerrarDropdownDepto();
+    if (!document.getElementById('subareaCombo').contains(e.target)) cerrarDropdownSubarea();
   });
 
   // ---- MULTI-SELECT DEPARTAMENTO ----
@@ -1155,6 +1277,8 @@
     document.getElementById('campo-area-texto').value = '';
     document.querySelectorAll('.area-opcion').forEach(o => o.classList.remove('seleccionado'));
     document.getElementById('campo-subarea').value = '';
+    document.getElementById('campo-subarea-texto').value = '';
+    document.querySelectorAll('#subareaLista .area-opcion').forEach(o => o.classList.remove('seleccionado'));
     document.getElementById('campo-descripcion').value = '';
     document.getElementById('campo-responsable').value = '';
     document.getElementById('campo-departamento').value = '';
