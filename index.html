@@ -1194,6 +1194,9 @@
       <div id="levError" style="display:none;margin-top:8px;padding:10px;background:#FEE2E2;border-radius:8px;color:#B91C1C;font-size:13px;font-weight:600;text-align:center"></div>
     </div>
 
+    <!-- Historial local -->
+    <div id="levHistorial" style="padding:0 12px 4px"></div>
+
     <!-- Escáner QR (oculto por defecto) -->
     <div id="qrScannerWrap" style="display:none;margin:0 12px;background:#000;border-radius:16px;overflow:hidden;position:relative">
       <video id="qrVideo" autoplay playsinline muted style="width:100%;display:block"></video>
@@ -1569,6 +1572,15 @@
 
       if (data.resultado === 'ok') {
         mostrarToast('Evidencia enviada correctamente', 'success');
+        if (data.id) {
+          guardarEnHistorial({
+            codigo:      data.id,
+            area:        subarea || area,
+            descripcion: descripcion,
+            estado:      estadoSeleccionado,
+            fecha:       new Date().toLocaleDateString('es-PE')
+          });
+        }
         limpiarFormulario();
       } else {
         mostrarToast('Error al guardar: ' + (data.error || 'desconocido'), 'error');
@@ -1989,6 +2001,65 @@
   }
 
   // =============================================
+  // HISTORIAL LOCAL (localStorage por dispositivo)
+  // =============================================
+  const HIST_KEY  = 'wt_historial';
+  const HIST_MAX  = 30;
+  const ESTADO_BG   = { Pendiente:'#FEF9C3', Recurrente:'#FEE2E2', Corregido:'#D1FAE5' };
+  const ESTADO_FONT = { Pendiente:'#92400E',  Recurrente:'#B91C1C',  Corregido:'#065F46' };
+
+  function obtenerHistorial() {
+    try { return JSON.parse(localStorage.getItem(HIST_KEY) || '[]'); } catch { return []; }
+  }
+  function guardarEnHistorial(entry) {
+    let hist = obtenerHistorial().filter(h => h.codigo !== entry.codigo);
+    hist.unshift(entry);
+    if (hist.length > HIST_MAX) hist = hist.slice(0, HIST_MAX);
+    localStorage.setItem(HIST_KEY, JSON.stringify(hist));
+  }
+  function actualizarEstadoHistorial(codigo, nuevoEstado) {
+    const hist = obtenerHistorial().map(h => h.codigo === codigo ? { ...h, estado: nuevoEstado } : h);
+    localStorage.setItem(HIST_KEY, JSON.stringify(hist));
+  }
+  function eliminarDeHistorial(codigo) {
+    const hist = obtenerHistorial().filter(h => h.codigo !== codigo);
+    localStorage.setItem(HIST_KEY, JSON.stringify(hist));
+    renderHistorial();
+  }
+
+  function renderHistorial() {
+    const cont = document.getElementById('levHistorial');
+    const hist = obtenerHistorial();
+    if (!hist.length) { cont.innerHTML = ''; return; }
+    cont.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Mis observaciones recientes</div>
+        <button onclick="localStorage.removeItem('${HIST_KEY}');renderHistorial()" style="background:none;border:none;font-size:11px;color:var(--muted);cursor:pointer;text-decoration:underline">Limpiar</button>
+      </div>
+      ${hist.map(h => `
+        <div style="background:#fff;border-radius:12px;padding:12px 14px;margin-bottom:8px;box-shadow:0 1px 6px rgba(0,0,0,.07);display:flex;align-items:center;gap:10px;cursor:pointer"
+             onclick="usarCodigo('${h.codigo}')">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;font-weight:800;color:var(--primary);letter-spacing:.5px">${h.codigo}</div>
+            <div style="font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h.area} · ${(h.descripcion||'').slice(0,40)}${(h.descripcion||'').length>40?'…':''}</div>
+            <div style="font-size:11px;color:#94A3B8;margin-top:2px">${h.fecha||''}</div>
+          </div>
+          <span style="flex-shrink:0;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:700;background:${ESTADO_BG[h.estado]||'#F1F5F9'};color:${ESTADO_FONT[h.estado]||'#334155'}">${h.estado||''}</span>
+          <button onclick="event.stopPropagation();eliminarDeHistorial('${h.codigo}')"
+            style="background:none;border:none;cursor:pointer;color:#CBD5E1;padding:4px;flex-shrink:0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          </button>
+        </div>
+      `).join('')}
+    `;
+  }
+  function usarCodigo(codigo) {
+    document.getElementById('levCodigo').value = codigo;
+    document.getElementById('levError').style.display = 'none';
+    buscarObservacion();
+  }
+
+  // =============================================
   // LEVANTAR OBSERVACIÓN
   // =============================================
   let levFotoBase64 = null;
@@ -2003,8 +2074,10 @@
     document.getElementById('qrScannerWrap').style.display = 'none';
     document.getElementById('levComentario').value = '';
     document.getElementById('levFotoPreview').style.display = 'none';
+    document.getElementById('levFotoZone').style.display = 'flex';
     levFotoBase64 = null;
     selLevEstado('Corregido', document.getElementById('lev-chip-cor'));
+    renderHistorial();
   }
   function cerrarLevantar() {
     cerrarQRScanner();
@@ -2107,6 +2180,7 @@
       const res  = await fetch(SCRIPT_URL, { method:'POST', body: JSON.stringify(payload) });
       const data = await res.json();
       if (data.resultado !== 'ok') throw new Error(data.error || 'Error al guardar');
+      actualizarEstadoHistorial(codigo, estado);
       mostrarToast('Levantamiento registrado correctamente', 'success');
       cerrarLevantar();
     } catch(e) {
