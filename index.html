@@ -931,6 +931,16 @@
           <span style="flex:1">Alvaro Medina</span>
           <div class="depto-check" id="pchk-AlvaroMedina"></div>
         </div>
+        <div style="padding:6px 12px 4px;border-top:1px solid #E9EEF4;margin-top:4px">
+          <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Otro participante</div>
+          <div style="display:flex;gap:6px">
+            <input id="partCustomInput" type="text" placeholder="Escribe un nombre..." onclick="event.stopPropagation()"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();agregarPartPersonalizado();}"
+              style="flex:1;padding:7px 10px;border:1.5px solid #D1D9E6;border-radius:8px;font-size:14px;outline:none;font-family:inherit;background:#FAFBFC"/>
+            <button onclick="event.stopPropagation();agregarPartPersonalizado()"
+              style="padding:7px 14px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:13px;white-space:nowrap">+ Agregar</button>
+          </div>
+        </div>
         <div style="padding:8px 12px">
           <button onclick="cerrarDropdownPart()" style="width:100%;padding:8px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px">Listo</button>
         </div>
@@ -1619,6 +1629,7 @@
 
   // ---- MULTI-SELECT PARTICIPANTES ----
   const PART_COLORES = { 'Juan Lopez':'#2575FC', 'Paola Roman':'#DD2476', 'Melanie':'#11998E', 'Elizabeth':'#F7971E', 'Orlando':'#396afc', 'Alvaro Medina':'#8E2DE2' };
+  const PART_COLORES_EXTRA = ['#0F766E','#B45309','#7C3AED','#0369A1','#BE185D','#15803D','#C2410C','#4338CA','#0E7490','#9333EA'];
   let partSeleccionados = [];
 
   function toggleDropdownPart() {
@@ -1654,6 +1665,21 @@
         display.appendChild(tag);
       });
     }
+  }
+
+  function agregarPartPersonalizado() {
+    const input = document.getElementById('partCustomInput');
+    const nombre = input.value.trim();
+    if (!nombre) return;
+    if (partSeleccionados.includes(nombre)) { input.value = ''; return; }
+    // Asignar color: si ya tiene en PART_COLORES úsalo, si no elige uno de EXTRA
+    if (!PART_COLORES[nombre]) {
+      const idx = Object.keys(PART_COLORES).length + partSeleccionados.filter(p => !PART_COLORES[p]).length;
+      PART_COLORES[nombre] = PART_COLORES_EXTRA[idx % PART_COLORES_EXTRA.length];
+    }
+    partSeleccionados.push(nombre);
+    input.value = '';
+    actualizarDisplayPart();
   }
 
   function actualizarDisplayDepto() {
@@ -1716,6 +1742,7 @@
     document.getElementById('campo-responsable-texto').value = '';
     document.querySelectorAll('#responsableLista .area-opcion').forEach(o => o.classList.remove('seleccionado'));
     document.getElementById('campo-participantes').value = '';
+    document.getElementById('partCustomInput').value = '';
     partSeleccionados = [];
     document.querySelectorAll('#partLista .depto-opcion').forEach(o => o.classList.remove('checked'));
     actualizarDisplayPart();
