@@ -160,7 +160,7 @@ function inicializarHoja(hoja, area) {
   // Fila 1: Titulo estilo Walk Through
   hoja.appendRow([HOTEL_NOMBRE + ' - WALK THROUGH - ' + mesActual.toUpperCase()]);
   hoja.getRange(FILA_TITULO, 1, 1, 8).merge()
-    .setBackground('#1A3C5E').setFontColor('#FFFFFF')
+    .setBackground('#7B1827').setFontColor('#FFFFFF')
     .setFontWeight('bold').setFontSize(16)
     .setHorizontalAlignment('center').setVerticalAlignment('middle');
   hoja.setRowHeight(FILA_TITULO, 55);
@@ -246,7 +246,7 @@ function actualizarTitulo(hoja) {
 // =============================================
 function formatearCabeceras(hoja) {
   hoja.getRange(FILA_CABECERAS, 1, 1, 8)
-    .setBackground('#1A3C5E').setFontColor('#FFFFFF')
+    .setBackground('#7B1827').setFontColor('#FFFFFF')
     .setFontWeight('bold').setFontSize(11)
     .setHorizontalAlignment('center').setVerticalAlignment('middle')
     .setWrap(true);
@@ -273,10 +273,9 @@ function formatearCabeceras(hoja) {
 // =============================================
 function colorearEstado(hoja, fila, estado) {
   const colores = {
-    'Conforme':    { bg: '#D4EDDA', font: '#1A7F54' },
-    'No conforme': { bg: '#FADBD8', font: '#C0392B' },
-    'Pendiente':   { bg: '#FEF5E7', font: '#B7770D' },
-    'Informativo': { bg: '#D6EAF8', font: '#1A5276' }
+    'Pendiente':   { bg: '#FEF9C3', font: '#92400E' },
+    'Recurrente':  { bg: '#FEE2E2', font: '#B91C1C' },
+    'Corregido':   { bg: '#D1FAE5', font: '#065F46' }
   };
   const c = colores[estado];
   if (c) {
@@ -391,7 +390,7 @@ function reformatearHoja() {
       hoja.insertRowBefore(1);
       hoja.getRange(1, 1, 1, 8).merge()
         .setValue(HOTEL_NOMBRE + ' - WALK THROUGH - ' + mesActual.toUpperCase())
-        .setBackground('#1A3C5E').setFontColor('#FFFFFF')
+        .setBackground('#7B1827').setFontColor('#FFFFFF')
         .setFontWeight('bold').setFontSize(16)
         .setHorizontalAlignment('center').setVerticalAlignment('middle');
       hoja.setRowHeight(1, 55);
