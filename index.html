@@ -978,6 +978,13 @@
           <span style="flex:1">Banquetes</span>
           <div class="depto-check" id="chk-Banquetes"></div>
         </div>
+        <div class="depto-opcion" data-value="Steward" data-color="#546E7A" onclick="toggleDepto(this)">
+          <div class="area-icono" style="background:#546E7A">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="m3 3 3 9"/><path d="M6 12h13l-3 7H9l-3-7z"/><path d="M8 12V7h8v5"/></svg>
+          </div>
+          <span style="flex:1">Steward</span>
+          <div class="depto-check" id="chk-Steward"></div>
+        </div>
         <div style="padding:8px 12px">
           <button onclick="cerrarDropdownDepto()" style="width:100%;padding:8px;background:var(--primary);color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px">Listo</button>
         </div>
@@ -1423,7 +1430,7 @@
   });
 
   // ---- MULTI-SELECT DEPARTAMENTO ----
-  const DEPTO_COLORES = { Mantenimiento:'#E67E22', Cocina:'#E74C3C', Limpieza:'#3498DB', Sistemas:'#9B59B6', 'A&B':'#F39C12', Calidad:'#27AE60', Banquetes:'#8E44AD' };
+  const DEPTO_COLORES = { Mantenimiento:'#E67E22', Cocina:'#E74C3C', Limpieza:'#3498DB', Sistemas:'#9B59B6', 'A&B':'#F39C12', Calidad:'#27AE60', Banquetes:'#8E44AD', Steward:'#546E7A' };
   let deptosSeleccionados = [];
 
   function toggleDropdownDepto() {
