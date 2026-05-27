@@ -362,7 +362,9 @@ function filtrarCopiaParaExportacion(ss, opts) {
 
       let fecha = raw instanceof Date ? raw : new Date(raw);
       if (isNaN(fecha.getTime())) {
-        const p = String(raw).split(' ')[0].split('/');
+        // Formato es-PE: "27/5/2026, 2:36:38 p.m." → quitar coma, tomar la parte de fecha
+        const soloFecha = String(raw).replace(/,/g, '').trim().split(/\s+/)[0]; // "27/5/2026"
+        const p = soloFecha.split('/');
         if (p.length === 3) fecha = new Date(Number(p[2]), Number(p[1]) - 1, Number(p[0]));
       }
       if (isNaN(fecha.getTime())) { eliminar.push(i); continue; }
