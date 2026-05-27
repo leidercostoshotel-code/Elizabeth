@@ -138,8 +138,8 @@ function guardarEnSheets(datos) {
   const fila = hoja.getLastRow();
 
   // Imagen visible en columna 3
-  hoja.getRange(fila, 3).setFormula('=IMAGE("' + datos.urlFoto + '",4,100,140)');
-  hoja.setRowHeight(fila, 120);
+  hoja.getRange(fila, 3).setFormula('=IMAGE("' + datos.urlFoto + '",4,130,200)');
+  hoja.setRowHeight(fila, 150);
 
   // Formato de la fila
   hoja.getRange(fila, 1, 1, 9)
@@ -168,7 +168,7 @@ function inicializarHoja(hoja, area) {
     .setBackground('#7B1827').setFontColor('#FFFFFF')
     .setFontWeight('bold').setFontSize(16)
     .setHorizontalAlignment('center').setVerticalAlignment('middle');
-  hoja.setRowHeight(FILA_TITULO, 55);
+  hoja.setRowHeight(FILA_TITULO, 65);
 
   // Fila 2: Filtro de mes
   hoja.appendRow(['']);
@@ -197,7 +197,7 @@ function configurarFiltroMes(hoja) {
     .setFontColor('#AAAAAA').setFontStyle('italic');
 
   hoja.getRange(FILA_FILTRO, 1, 1, 9).setBackground('#7F8C8D');
-  hoja.setRowHeight(FILA_FILTRO, 35);
+  hoja.setRowHeight(FILA_FILTRO, 40);
 }
 
 // =============================================
@@ -255,19 +255,19 @@ function formatearCabeceras(hoja) {
     .setFontWeight('bold').setFontSize(11)
     .setHorizontalAlignment('center').setVerticalAlignment('middle')
     .setWrap(true);
-  hoja.setRowHeight(FILA_CABECERAS, 50);
+  hoja.setRowHeight(FILA_CABECERAS, 58);
   hoja.setFrozenRows(FILA_CABECERAS);
 
   // Anchos de columna
-  hoja.setColumnWidth(1, 140);  // AREA
-  hoja.setColumnWidth(2, 220);  // DESCRIPCION DE HALLAZGO
-  hoja.setColumnWidth(3, 180);  // REGISTRO FOTOGRAFICO
-  hoja.setColumnWidth(4, 130);  // RESPONSABLE
-  hoja.setColumnWidth(5, 160);  // PARTICIPANTES
-  hoja.setColumnWidth(6, 130);  // DEPARTAMENTO
-  hoja.setColumnWidth(7, 220);  // COMENTARIO RESPUESTA
-  hoja.setColumnWidth(8, 180);  // FOTO LEVANTAMIENTO
-  hoja.setColumnWidth(9, 110);  // ESTADO
+  hoja.setColumnWidth(1, 180);  // AREA
+  hoja.setColumnWidth(2, 280);  // DESCRIPCION DE HALLAZGO
+  hoja.setColumnWidth(3, 220);  // REGISTRO FOTOGRAFICO
+  hoja.setColumnWidth(4, 160);  // RESPONSABLE
+  hoja.setColumnWidth(5, 200);  // PARTICIPANTES
+  hoja.setColumnWidth(6, 160);  // DEPARTAMENTO
+  hoja.setColumnWidth(7, 280);  // COMENTARIO RESPUESTA
+  hoja.setColumnWidth(8, 220);  // FOTO LEVANTAMIENTO
+  hoja.setColumnWidth(9, 140);  // ESTADO
 
   // Ocultar columnas internas
   hoja.hideColumns(10);
