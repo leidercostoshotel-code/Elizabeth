@@ -1151,6 +1151,63 @@
   </div>
 </div>
 
+<!-- MODAL FILTRO DESCARGA -->
+<div class="login-overlay" id="descargaOverlay" style="display:none">
+  <div class="login-modal" style="max-width:380px">
+    <div class="login-header">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:28px;height:28px;color:#fff"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <div>
+        <div style="font-weight:700;font-size:16px;color:#fff">Descargar Informe</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.7)">Selecciona el período del reporte</div>
+      </div>
+    </div>
+    <div class="login-body">
+      <div style="font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Tipo de descarga</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:18px">
+        <div class="descarga-card descarga-card-sel" id="desc-card-actual" onclick="seleccionarTipoDescarga('actual')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px;height:22px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="16" r="2" fill="currentColor" stroke="none"/></svg>
+          <span>Mes actual</span>
+        </div>
+        <div class="descarga-card" id="desc-card-mes" onclick="seleccionarTipoDescarga('mes')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px;height:22px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="15" x2="16" y2="15"/></svg>
+          <span>Por mes</span>
+        </div>
+        <div class="descarga-card" id="desc-card-rango" onclick="seleccionarTipoDescarga('rango')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px;height:22px"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="7" y1="14" x2="12" y2="14"/><line x1="7" y1="18" x2="17" y2="18"/></svg>
+          <span>Rango de fechas</span>
+        </div>
+        <div class="descarga-card" id="desc-card-completo" onclick="seleccionarTipoDescarga('completo')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:22px;height:22px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+          <span>Completo</span>
+        </div>
+      </div>
+      <div id="campoMes" style="display:none;margin-bottom:14px">
+        <div class="login-field">
+          <label>Selecciona el mes</label>
+          <input type="month" id="inputMes" style="width:100%;box-sizing:border-box;padding:11px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;outline:none;color:var(--text);font-family:inherit">
+        </div>
+      </div>
+      <div id="campoRango" style="display:none;margin-bottom:14px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="login-field" style="margin-bottom:0">
+            <label>Desde</label>
+            <input type="date" id="inputDesde" style="width:100%;box-sizing:border-box;padding:11px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;outline:none;color:var(--text);font-family:inherit">
+          </div>
+          <div class="login-field" style="margin-bottom:0">
+            <label>Hasta</label>
+            <input type="date" id="inputHasta" style="width:100%;box-sizing:border-box;padding:11px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;outline:none;color:var(--text);font-family:inherit">
+          </div>
+        </div>
+      </div>
+      <button class="login-btn" onclick="ejecutarDescargaFiltrada()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Descargar Excel
+      </button>
+      <button onclick="cerrarFiltroDescarga()" style="width:100%;padding:8px;background:none;border:1px solid var(--border);border-radius:8px;color:var(--muted);font-size:13px;cursor:pointer;margin-top:6px">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <!-- TOAST -->
 <div class="toast" id="toast">
   <svg id="toast-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"></svg>
@@ -1424,7 +1481,7 @@
     if (u === LOGIN_USUARIO && p === LOGIN_CLAVE) {
       sessionStorage.setItem(SESSION_KEY, '1');
       cerrarLogin();
-      ejecutarDescarga();
+      abrirFiltroDescarga();
     } else {
       document.getElementById('loginError').style.display = 'block';
       document.getElementById('loginPass').value = '';
@@ -1432,31 +1489,62 @@
     }
   }
 
-  async function descargarInformeExcel() {
+  function descargarInformeExcel() {
     if (!sessionStorage.getItem(SESSION_KEY)) { abrirLogin(); return; }
-    ejecutarDescarga();
+    abrirFiltroDescarga();
   }
 
-  async function ejecutarDescarga() {
-    const opcion = prompt('Tipo de descarga: completo, dia o mes', 'mes');
-    if (!opcion) return;
-    const tipo = opcion.toLowerCase().trim();
-    if (!['completo', 'dia', 'mes'].includes(tipo)) {
-      mostrarToast('Tipo invalido. Usa: completo, dia o mes', 'error');
-      return;
-    }
+  let _tipoDescarga = 'actual';
 
-    const params = new URLSearchParams({ action: 'exportExcel', tipo });
-    if (tipo === 'dia') {
-      const fecha = prompt('Ingresa fecha (YYYY-MM-DD)', new Date().toISOString().slice(0, 10));
-      if (!fecha) return;
-      params.set('fecha', fecha);
-    } else if (tipo === 'mes') {
-      const mes = prompt('Ingresa mes (YYYY-MM)', new Date().toISOString().slice(0, 7));
-      if (!mes) return;
+  function abrirFiltroDescarga() {
+    const hoy = new Date();
+    const mesActual = hoy.getFullYear() + '-' + String(hoy.getMonth()+1).padStart(2,'0');
+    const fechaHoy = hoy.toISOString().slice(0,10);
+    document.getElementById('inputMes').value = mesActual;
+    document.getElementById('inputDesde').value = mesActual + '-01';
+    document.getElementById('inputHasta').value = fechaHoy;
+    seleccionarTipoDescarga('actual');
+    document.getElementById('descargaOverlay').style.display = 'flex';
+  }
+
+  function cerrarFiltroDescarga() {
+    document.getElementById('descargaOverlay').style.display = 'none';
+  }
+
+  function seleccionarTipoDescarga(tipo) {
+    _tipoDescarga = tipo;
+    ['actual','mes','rango','completo'].forEach(t => {
+      document.getElementById('desc-card-' + t).classList.toggle('descarga-card-sel', t === tipo);
+    });
+    document.getElementById('campoMes').style.display = tipo === 'mes' ? 'block' : 'none';
+    document.getElementById('campoRango').style.display = tipo === 'rango' ? 'block' : 'none';
+  }
+
+  async function ejecutarDescargaFiltrada() {
+    const hoy = new Date();
+    const params = new URLSearchParams({ action: 'exportExcel' });
+
+    if (_tipoDescarga === 'actual') {
+      params.set('tipo', 'mes');
+      params.set('mes', hoy.getFullYear() + '-' + String(hoy.getMonth()+1).padStart(2,'0'));
+    } else if (_tipoDescarga === 'mes') {
+      const mes = document.getElementById('inputMes').value;
+      if (!mes) { mostrarToast('Selecciona un mes', 'error'); return; }
+      params.set('tipo', 'mes');
       params.set('mes', mes);
+    } else if (_tipoDescarga === 'rango') {
+      const desde = document.getElementById('inputDesde').value;
+      const hasta = document.getElementById('inputHasta').value;
+      if (!desde || !hasta) { mostrarToast('Selecciona las fechas de inicio y fin', 'error'); return; }
+      if (desde > hasta) { mostrarToast('La fecha de inicio debe ser anterior a la fecha fin', 'error'); return; }
+      params.set('tipo', 'rango');
+      params.set('desde', desde);
+      params.set('hasta', hasta);
+    } else {
+      params.set('tipo', 'completo');
     }
 
+    cerrarFiltroDescarga();
     const btn = document.getElementById('btnDescargar');
     const prev = btn.innerHTML;
     btn.disabled = true;
@@ -1465,9 +1553,7 @@
     try {
       const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
       const data = await res.json();
-      if (data.resultado !== 'ok' || !data.url) {
-        throw new Error(data.error || 'No se pudo generar el archivo');
-      }
+      if (data.resultado !== 'ok' || !data.url) throw new Error(data.error || 'No se pudo generar el archivo');
       window.open(data.url, '_blank');
       mostrarToast('Excel generado correctamente', 'success');
     } catch (err) {
@@ -1833,6 +1919,27 @@
     transition: opacity .2s;
   }
   .login-btn:hover { opacity: .88; }
+  .descarga-card {
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 10px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-align: center;
+    transition: all .15s;
+    background: #FAFBFC;
+    user-select: none;
+  }
+  .descarga-card:hover { border-color: var(--primary); color: var(--primary); background: #FDF5F6; }
+  .descarga-card:hover svg { stroke: var(--primary); }
+  .descarga-card-sel { border-color: var(--primary) !important; color: var(--primary) !important; background: #FDF5F6 !important; }
+  .descarga-card-sel svg { stroke: var(--primary); }
 </style>
 </body>
 </html>
