@@ -317,7 +317,7 @@ function exportarInformeExcel(opts) {
   if (opts.tipo === 'dia' || opts.tipo === 'mes' || opts.tipo === 'rango') {
     filtrarCopiaParaExportacion(ssCopia, opts);
   }
-
+  prepararImagenesParaExcel(ssCopia);
   SpreadsheetApp.flush();
 
   const urlExport = 'https://docs.google.com/spreadsheets/d/' + ssCopia.getId() + '/export?format=xlsx';
@@ -343,40 +343,60 @@ function exportarInformeExcel(opts) {
 }
 
 function filtrarCopiaParaExportacion(ss, opts) {
-  const hojas = ss.getSheets();
   const tz = Session.getScriptTimeZone();
   const hoy = new Date();
   const fechaObjetivo = opts.fecha || Utilities.formatDate(hoy, tz, 'yyyy-MM-dd');
-  const mesObjetivo = opts.mes || Utilities.formatDate(hoy, tz, 'yyyy-MM');
+  const mesObjetivo   = opts.mes   || Utilities.formatDate(hoy, tz, 'yyyy-MM');
   const desdeDate = opts.desde ? new Date(opts.desde + 'T00:00:00') : null;
   const hastaDate = opts.hasta ? new Date(opts.hasta + 'T23:59:59') : null;
 
-  hojas.forEach(hoja => {
+  ss.getSheets().forEach(hoja => {
     const ultima = hoja.getLastRow();
     if (ultima < FILA_DATOS) return;
-    hoja.showRows(FILA_DATOS, ultima - FILA_DATOS + 1);
 
+    // Recolectar filas a eliminar (de abajo hacia arriba para no desplazar índices)
+    const eliminar = [];
     for (let i = FILA_DATOS; i <= ultima; i++) {
       const raw = hoja.getRange(i, COL_FECHA).getValue();
-      if (!raw) { hoja.hideRows(i); continue; }
+      if (!raw) { eliminar.push(i); continue; }
 
       let fecha = raw instanceof Date ? raw : new Date(raw);
-      if (!(fecha instanceof Date) || isNaN(fecha.getTime())) {
-        const texto = String(raw);
-        const p = texto.split(' ')[0].split('/');
+      if (isNaN(fecha.getTime())) {
+        const p = String(raw).split(' ')[0].split('/');
         if (p.length === 3) fecha = new Date(Number(p[2]), Number(p[1]) - 1, Number(p[0]));
       }
-      if (!(fecha instanceof Date) || isNaN(fecha.getTime())) { hoja.hideRows(i); continue; }
+      if (isNaN(fecha.getTime())) { eliminar.push(i); continue; }
 
       const ymd = Utilities.formatDate(fecha, tz, 'yyyy-MM-dd');
       const ym  = Utilities.formatDate(fecha, tz, 'yyyy-MM');
       let visible;
-      if (opts.tipo === 'dia')   visible = ymd === fechaObjetivo;
-      else if (opts.tipo === 'mes')   visible = ym === mesObjetivo;
+      if      (opts.tipo === 'dia')   visible = ymd === fechaObjetivo;
+      else if (opts.tipo === 'mes')   visible = ym  === mesObjetivo;
       else if (opts.tipo === 'rango') visible = desdeDate && hastaDate && fecha >= desdeDate && fecha <= hastaDate;
       else visible = true;
-      if (!visible) hoja.hideRows(i);
+      if (!visible) eliminar.push(i);
     }
+
+    for (let i = eliminar.length - 1; i >= 0; i--) {
+      hoja.deleteRow(eliminar[i]);
+    }
+  });
+}
+
+// Convierte =IMAGE("url") a URL de texto para que sea visible en Excel/Office 365
+function prepararImagenesParaExcel(ss) {
+  const COLS_FOTO = [3, 8]; // REGISTRO FOTOGRAFICO y REGISTRO FOTOGRAFICO DEL LEVANTAMIENTO
+  ss.getSheets().forEach(hoja => {
+    const ultima = hoja.getLastRow();
+    if (ultima < FILA_DATOS) return;
+    COLS_FOTO.forEach(col => {
+      for (let i = FILA_DATOS; i <= ultima; i++) {
+        const formula = hoja.getRange(i, col).getFormula();
+        if (!formula) continue;
+        const match = formula.match(/=IMAGE\("([^"]+)"/i);
+        if (match) hoja.getRange(i, col).setValue(match[1]);
+      }
+    });
   });
 }
 
