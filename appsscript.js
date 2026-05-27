@@ -308,7 +308,6 @@ function buildResponse(data) {
 // EXPORTAR EXCEL (idéntico a base de datos)
 // =============================================
 function exportarInformeExcel(opts) {
-  const ssOrigen = SpreadsheetApp.openById(SPREADSHEET_ID);
   const marca = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyyMMdd_HHmmss');
   const nombreCopia = 'Informe_Evidencias_' + marca;
   const archivoOrigen = DriveApp.getFileById(SPREADSHEET_ID);
@@ -319,26 +318,26 @@ function exportarInformeExcel(opts) {
     filtrarCopiaParaExportacion(ssCopia, opts);
   }
 
+  SpreadsheetApp.flush();
+
   const urlExport = 'https://docs.google.com/spreadsheets/d/' + ssCopia.getId() + '/export?format=xlsx';
   const token = ScriptApp.getOAuthToken();
   const resp = UrlFetchApp.fetch(urlExport, {
     headers: { Authorization: 'Bearer ' + token },
     muteHttpExceptions: true
   });
+
+  // Eliminar copia temporal
+  archivoCopia.setTrashed(true);
+
   if (resp.getResponseCode() !== 200) {
     throw new Error('No se pudo exportar Excel. Código: ' + resp.getResponseCode());
   }
 
-  const blob = resp.getBlob().setName(nombreCopia + '.xlsx');
-  const archivoXlsx = DriveApp.createFile(blob);
-  archivoXlsx.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-
-  // Limpieza copia temporal del spreadsheet
-  archivoCopia.setTrashed(true);
-
+  // Devolver contenido en base64 para descarga directa en el navegador
   return {
-    nombre: archivoXlsx.getName(),
-    url: archivoXlsx.getUrl(),
+    nombre: nombreCopia + '.xlsx',
+    base64: Utilities.base64Encode(resp.getContent()),
     tipo: opts.tipo
   };
 }

@@ -1553,9 +1553,18 @@
     try {
       const res = await fetch(`${SCRIPT_URL}?${params.toString()}`);
       const data = await res.json();
-      if (data.resultado !== 'ok' || !data.url) throw new Error(data.error || 'No se pudo generar el archivo');
-      window.open(data.url, '_blank');
-      mostrarToast('Excel generado correctamente', 'success');
+      if (data.resultado !== 'ok' || !data.base64) throw new Error(data.error || 'No se pudo generar el archivo');
+      const bytes = Uint8Array.from(atob(data.base64), c => c.charCodeAt(0));
+      const xlsxBlob = new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const dlUrl = URL.createObjectURL(xlsxBlob);
+      const a = document.createElement('a');
+      a.href = dlUrl;
+      a.download = data.nombre;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(dlUrl);
+      mostrarToast('Excel descargado correctamente', 'success');
     } catch (err) {
       mostrarToast('Error al generar Excel: ' + err.message, 'error');
     } finally {
