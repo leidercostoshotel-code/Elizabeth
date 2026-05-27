@@ -12,6 +12,7 @@
 <meta name="apple-mobile-web-app-title" content="Walk Through">
 <link rel="apple-touch-icon" href="./swissotel_lima_cover.jpeg">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <style>
   :root {
     --primary: #7B1827;
@@ -1142,12 +1143,116 @@
     Enviar Evidencia
   </button>
 
+  <button onclick="abrirLevantar()" style="width:100%;margin-top:10px;padding:14px;background:none;border:2px solid var(--primary);border-radius:14px;color:var(--primary);font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;font-family:inherit">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9S3 16.97 3 12 7.03 3 12 3s9 4.03 9 9z"/></svg>
+    Levantar Observación
+  </button>
+
   <button class="btn-photo btn-galeria" id="btnDescargar" onclick="descargarInformeExcel()" style="width:100%;margin-top:10px">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
     Descargar informe Excel
   </button>
 
 </main>
+
+<!-- MODAL LEVANTAR OBSERVACIÓN -->
+<div class="login-overlay" id="levantarOverlay" style="display:none;align-items:flex-start;padding:0">
+  <div style="width:100%;max-width:480px;height:100dvh;overflow-y:auto;background:#F7F3F4;display:flex;flex-direction:column">
+
+    <!-- Header vino -->
+    <div style="background:var(--primary);padding:18px 20px 14px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:10">
+      <button onclick="cerrarLevantar()" style="background:rgba(255,255,255,.15);border:none;border-radius:10px;padding:8px;cursor:pointer;display:flex;align-items:center;justify-content:center">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" style="width:20px;height:20px"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div>
+        <div style="font-weight:700;font-size:16px;color:#fff">Levantar Observación</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.7)">Busca por código o escanea el QR</div>
+      </div>
+    </div>
+
+    <!-- Buscador -->
+    <div style="padding:16px;background:#fff;margin:12px;border-radius:16px;box-shadow:0 2px 12px rgba(0,0,0,.08)">
+      <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Código de observación</div>
+      <div style="display:flex;gap:8px">
+        <input id="levCodigo" type="text" placeholder="Ej: BA001-27052026" maxlength="20"
+          style="flex:1;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:16px;outline:none;font-family:inherit;text-transform:uppercase;letter-spacing:1px"
+          oninput="this.value=this.value.toUpperCase()"
+          onkeydown="if(event.key==='Enter')buscarObservacion()">
+        <button onclick="abrirQRScanner()" title="Escanear QR"
+          style="padding:12px;background:var(--primary);border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" style="width:22px;height:22px">
+            <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/>
+            <rect x="3" y="14" width="7" height="7" rx="1"/>
+            <path d="M14 14h2v2h-2z"/><path d="M18 14h3"/><path d="M14 18h2"/><path d="M18 18h3v3"/><path d="M21 18v-1"/>
+          </svg>
+        </button>
+      </div>
+      <button onclick="buscarObservacion()"
+        style="width:100%;margin-top:10px;padding:12px;background:var(--primary);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit">
+        Buscar
+      </button>
+      <div id="levError" style="display:none;margin-top:8px;padding:10px;background:#FEE2E2;border-radius:8px;color:#B91C1C;font-size:13px;font-weight:600;text-align:center"></div>
+    </div>
+
+    <!-- Escáner QR (oculto por defecto) -->
+    <div id="qrScannerWrap" style="display:none;margin:0 12px;background:#000;border-radius:16px;overflow:hidden;position:relative">
+      <video id="qrVideo" autoplay playsinline muted style="width:100%;display:block"></video>
+      <canvas id="qrCanvas" style="display:none"></canvas>
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none">
+        <div style="width:180px;height:180px;border:3px solid rgba(255,255,255,.8);border-radius:16px;box-shadow:0 0 0 2000px rgba(0,0,0,.45)"></div>
+      </div>
+      <button onclick="cerrarQRScanner()" style="position:absolute;top:10px;right:10px;background:rgba(0,0,0,.6);border:none;border-radius:8px;padding:8px;cursor:pointer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" style="width:18px;height:18px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Resultado: observación encontrada -->
+    <div id="levResultado" style="display:none;margin:0 12px 12px">
+      <div style="background:#fff;border-radius:16px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,.08)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Observación encontrada</div>
+          <span id="levEstadoBadge" style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700"></span>
+        </div>
+        <div id="levCodigoBadge" style="font-size:13px;font-weight:800;color:var(--primary);letter-spacing:1px;margin-bottom:10px"></div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px" id="levArea"></div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5" id="levDesc"></div>
+        <img id="levFotoOriginal" src="" alt="Foto evidencia" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;display:none">
+      </div>
+
+      <!-- Formulario de levantamiento -->
+      <div style="background:#fff;border-radius:16px;padding:16px;margin-top:10px;box-shadow:0 2px 12px rgba(0,0,0,.08)">
+        <div style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">Registrar levantamiento</div>
+
+        <label style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Nuevo estado</label>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+          <div id="lev-chip-pend" class="chip-estado" onclick="selLevEstado('Pendiente',this)" style="border-color:#F59E0B;color:#92400E;background:#FEF9C3">Pendiente</div>
+          <div id="lev-chip-rec"  class="chip-estado" onclick="selLevEstado('Recurrente',this)" style="border-color:#EF4444;color:#B91C1C;background:#FEE2E2">Recurrente</div>
+          <div id="lev-chip-cor"  class="chip-estado chip-sel" onclick="selLevEstado('Corregido',this)" style="border-color:#10B981;color:#065F46;background:#D1FAE5">Corregido ✓</div>
+        </div>
+        <input type="hidden" id="levEstadoVal" value="Corregido">
+
+        <label style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Comentario / Respuesta del área</label>
+        <textarea id="levComentario" rows="3" placeholder="Describe la acción correctiva tomada..."
+          style="width:100%;box-sizing:border-box;padding:12px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;resize:none;outline:none;margin-bottom:14px"></textarea>
+
+        <label style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px">Foto del levantamiento</label>
+        <div id="levFotoZone" onclick="abrirFotoLev()" style="border:2px dashed var(--border);border-radius:12px;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;gap:8px;color:var(--muted);font-size:13px;font-weight:600;margin-bottom:14px;background:#FAFBFC">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="width:32px;height:32px"><circle cx="12" cy="12" r="3"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/><line x1="16" y1="16" x2="16" y2="22"/><line x1="13" y1="19" x2="19" y2="19"/></svg>
+          Tomar o seleccionar foto
+        </div>
+        <img id="levFotoPreview" src="" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;display:none;margin-bottom:14px">
+        <input type="file" id="levFileInput" accept="image/*" capture="environment" style="display:none" onchange="procesarFotoLev(this)">
+
+        <button onclick="enviarLevantamiento()" id="btnEnviarLev"
+          style="width:100%;padding:14px;background:var(--primary);color:#fff;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M9 12l2 2 4-4"/><path d="M21 12c0 4.97-4.03 9-9 9S3 16.97 3 12 7.03 3 12 3s9 4.03 9 9z"/></svg>
+          Confirmar Levantamiento
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
 
 <!-- MODAL LOGIN DESCARGA -->
 <div class="login-overlay" id="loginOverlay" style="display:none">
@@ -1882,6 +1987,170 @@
       document.getElementById('chip-' + t).className = 'estado-chip';
     });
   }
+
+  // =============================================
+  // LEVANTAR OBSERVACIÓN
+  // =============================================
+  let levFotoBase64 = null;
+  let qrStream      = null;
+  let qrAnimFrame   = null;
+
+  function abrirLevantar() {
+    document.getElementById('levantarOverlay').style.display = 'flex';
+    document.getElementById('levCodigo').value     = '';
+    document.getElementById('levError').style.display = 'none';
+    document.getElementById('levResultado').style.display = 'none';
+    document.getElementById('qrScannerWrap').style.display = 'none';
+    document.getElementById('levComentario').value = '';
+    document.getElementById('levFotoPreview').style.display = 'none';
+    levFotoBase64 = null;
+    selLevEstado('Corregido', document.getElementById('lev-chip-cor'));
+  }
+  function cerrarLevantar() {
+    cerrarQRScanner();
+    document.getElementById('levantarOverlay').style.display = 'none';
+  }
+
+  function selLevEstado(val, el) {
+    document.getElementById('levEstadoVal').value = val;
+    ['lev-chip-pend','lev-chip-rec','lev-chip-cor'].forEach(id => {
+      document.getElementById(id).classList.remove('chip-sel');
+    });
+    el.classList.add('chip-sel');
+  }
+
+  async function buscarObservacion() {
+    const codigo = document.getElementById('levCodigo').value.trim().toUpperCase();
+    const errEl  = document.getElementById('levError');
+    if (!codigo) { errEl.textContent = 'Ingresa un código'; errEl.style.display = 'block'; return; }
+    errEl.style.display = 'none';
+
+    const btn = document.querySelector('#levantarOverlay button[onclick="buscarObservacion()"]');
+    const prev = btn.textContent;
+    btn.textContent = 'Buscando...'; btn.disabled = true;
+
+    try {
+      const res  = await fetch(`${SCRIPT_URL}?action=buscar&codigo=${encodeURIComponent(codigo)}`);
+      const data = await res.json();
+      btn.textContent = prev; btn.disabled = false;
+
+      if (data.resultado === 'no_encontrado') {
+        errEl.textContent = 'Código no encontrado. Verifica e intenta de nuevo.';
+        errEl.style.display = 'block';
+        document.getElementById('levResultado').style.display = 'none';
+        return;
+      }
+      // Mostrar resultado
+      const estadoColores = { Pendiente:'#FEF9C3', Recurrente:'#FEE2E2', Corregido:'#D1FAE5' };
+      const estadoFont    = { Pendiente:'#92400E', Recurrente:'#B91C1C', Corregido:'#065F46' };
+      const badge = document.getElementById('levEstadoBadge');
+      badge.textContent = data.estado || 'Sin estado';
+      badge.style.background = estadoColores[data.estado] || '#F1F5F9';
+      badge.style.color       = estadoFont[data.estado]   || '#334155';
+
+      document.getElementById('levCodigoBadge').textContent = '# ' + data.codigo;
+      document.getElementById('levArea').textContent        = data.area || '';
+      document.getElementById('levDesc').textContent        = data.descripcion || '';
+
+      const fotoOrig = document.getElementById('levFotoOriginal');
+      if (data.urlFoto) { fotoOrig.src = data.urlFoto; fotoOrig.style.display = 'block'; }
+      else fotoOrig.style.display = 'none';
+
+      document.getElementById('levResultado').style.display = 'block';
+      document.getElementById('levResultado').scrollIntoView({ behavior: 'smooth' });
+    } catch(e) {
+      btn.textContent = prev; btn.disabled = false;
+      errEl.textContent = 'Error al conectar. Verifica tu conexión.';
+      errEl.style.display = 'block';
+    }
+  }
+
+  function abrirFotoLev() { document.getElementById('levFileInput').click(); }
+
+  function procesarFotoLev(input) {
+    if (!input.files || !input.files[0]) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX = 1200;
+        let w = img.width, h = img.height;
+        if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        levFotoBase64 = canvas.toDataURL('image/jpeg', 0.75);
+        const preview = document.getElementById('levFotoPreview');
+        preview.src = levFotoBase64;
+        preview.style.display = 'block';
+        document.getElementById('levFotoZone').style.display = 'none';
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+
+  async function enviarLevantamiento() {
+    const codigo     = document.getElementById('levCodigo').value.trim().toUpperCase();
+    const comentario = document.getElementById('levComentario').value.trim();
+    const estado     = document.getElementById('levEstadoVal').value;
+    if (!codigo) { mostrarToast('Código requerido', 'error'); return; }
+
+    const btn = document.getElementById('btnEnviarLev');
+    const prev = btn.innerHTML;
+    btn.disabled = true; btn.textContent = 'Enviando...';
+
+    try {
+      const payload = { action: 'levantar', codigo, comentario, estado };
+      if (levFotoBase64) payload.foto = levFotoBase64;
+
+      const res  = await fetch(SCRIPT_URL, { method:'POST', body: JSON.stringify(payload) });
+      const data = await res.json();
+      if (data.resultado !== 'ok') throw new Error(data.error || 'Error al guardar');
+      mostrarToast('Levantamiento registrado correctamente', 'success');
+      cerrarLevantar();
+    } catch(e) {
+      mostrarToast('Error: ' + e.message, 'error');
+    } finally {
+      btn.disabled = false; btn.innerHTML = prev;
+    }
+  }
+
+  // --- QR Scanner ---
+  async function abrirQRScanner() {
+    try {
+      qrStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      const video  = document.getElementById('qrVideo');
+      video.srcObject = qrStream;
+      document.getElementById('qrScannerWrap').style.display = 'block';
+      video.addEventListener('loadeddata', escanearFrame);
+    } catch(e) {
+      mostrarToast('No se pudo acceder a la cámara', 'error');
+    }
+  }
+  function cerrarQRScanner() {
+    if (qrStream) { qrStream.getTracks().forEach(t => t.stop()); qrStream = null; }
+    if (qrAnimFrame) { cancelAnimationFrame(qrAnimFrame); qrAnimFrame = null; }
+    document.getElementById('qrScannerWrap').style.display = 'none';
+  }
+  function escanearFrame() {
+    const video  = document.getElementById('qrVideo');
+    const canvas = document.getElementById('qrCanvas');
+    if (video.readyState !== video.HAVE_ENOUGH_DATA) { qrAnimFrame = requestAnimationFrame(escanearFrame); return; }
+    canvas.width  = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+    if (code && code.data) {
+      document.getElementById('levCodigo').value = code.data.toUpperCase();
+      cerrarQRScanner();
+      buscarObservacion();
+      return;
+    }
+    qrAnimFrame = requestAnimationFrame(escanearFrame);
+  }
 </script>
 
 <style>
@@ -1981,6 +2250,18 @@
   .descarga-card:hover svg { stroke: var(--primary); }
   .descarga-card-sel { border-color: var(--primary) !important; color: var(--primary) !important; background: #FDF5F6 !important; }
   .descarga-card-sel svg { stroke: var(--primary); }
+  .chip-estado {
+    padding: 10px 6px;
+    border-radius: 10px;
+    border: 2px solid;
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+    transition: all .15s;
+    opacity: .55;
+  }
+  .chip-estado.chip-sel { opacity: 1; transform: scale(1.04); }
 </style>
 </body>
 </html>

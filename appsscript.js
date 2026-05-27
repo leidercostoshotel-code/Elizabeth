@@ -20,20 +20,34 @@ const FILA_DATOS     = 4;
 
 // Columnas identicas al formato Walk Through
 const CABECERAS = [
-  'AREA',
-  'DESCRIPCION DE HALLAZGO',
-  'REGISTRO FOTOGRAFICO',
-  'RESPONSABLE',
-  'PARTICIPANTES',
-  'DEPARTAMENTO',
+  'AREA', 'DESCRIPCION DE HALLAZGO', 'REGISTRO FOTOGRAFICO',
+  'RESPONSABLE', 'PARTICIPANTES', 'DEPARTAMENTO',
   'Comentario - Respuesta del area responsable',
-  'REGISTRO FOTOGRAFICO DEL LEVANTAMIENTO',
-  'ESTADO'
+  'REGISTRO FOTOGRAFICO DEL LEVANTAMIENTO', 'ESTADO',
+  'CÓDIGO', 'QR'
 ];
 
-// Columnas internas (ocultas)
-const COL_ID_INTERNO   = 10;
-const COL_FECHA        = 11;
+// Columnas visibles: 1-11 | Ocultas: 12 (fecha)
+const COL_ID_INTERNO = 10;  // CÓDIGO legible visible
+const COL_QR         = 11;  // QR image visible
+const COL_FECHA      = 12;  // Fecha oculta
+
+// Abreviaciones para código legible (2 letras por subárea)
+const ABREV = (nombre) => {
+  const limpio = nombre.replace(/[^A-Za-z]/g, '');
+  return limpio.substring(0, 2).toUpperCase() || 'XX';
+};
+
+function generarCodigo(subarea, hoja) {
+  const prefijo = ABREV(subarea);
+  const filas   = Math.max(0, hoja.getLastRow() - FILA_DATOS + 1);
+  const seq     = String(filas + 1).padStart(3, '0');
+  const hoy     = new Date();
+  const dd  = String(hoy.getDate()).padStart(2, '0');
+  const mm  = String(hoy.getMonth() + 1).padStart(2, '0');
+  const yyyy = hoy.getFullYear();
+  return prefijo + seq + '-' + dd + mm + yyyy;  // ej. BA001-27052026
+}
 
 // =============================================
 function doOptions(e) { return buildResponse({}); }
@@ -41,6 +55,14 @@ function doOptions(e) { return buildResponse({}); }
 function doGet(e) {
   try {
     const action = (e && e.parameter && e.parameter.action) ? e.parameter.action : '';
+    if (action === 'buscar') {
+      const codigo = (e.parameter.codigo || '').trim().toUpperCase();
+      if (!codigo) return buildResponse({ resultado: 'error', error: 'Código requerido' });
+      const encontrado = buscarPorCodigo(codigo);
+      return buildResponse(encontrado
+        ? { resultado: 'ok', ...encontrado }
+        : { resultado: 'no_encontrado' });
+    }
     if (action === 'exportExcel') {
       const tipo = (e.parameter.tipo || 'completo').toLowerCase(); // completo|dia|mes|rango
       const fecha = e.parameter.fecha || '';
@@ -62,6 +84,18 @@ function doGet(e) {
 function doPost(e) {
   try {
     const p = JSON.parse(e.postData.contents);
+
+    // Acción: levantar observación existente
+    if (p.action === 'levantar') {
+      const out = levantarObservacion(
+        (p.codigo || '').trim().toUpperCase(),
+        p.comentario || '',
+        p.foto || '',
+        p.estado || 'Corregido'
+      );
+      return buildResponse(out);
+    }
+
     const fotoInfo = guardarFotoEnDrive(p.foto);
     const id = guardarEnSheets({
       fecha:        p.fecha || new Date().toLocaleString('es-PE'),
@@ -118,42 +152,41 @@ function guardarEnSheets(datos) {
   const ultima = hoja.getLastRow();
   if (ultima >= FILA_DATOS) hoja.showRows(FILA_DATOS, ultima - FILA_DATOS + 1);
 
-  const id = generarId();
+  const codigo = generarCodigo(datos.subarea || datos.area, hoja);
 
-  // Columnas: AREA | DESC | FOTO | RESPONSABLE | PARTICIPANTES | DEPTO | COMENTARIO | FOTO_LEV | ESTADO | ID | FECHA
+  // Cols: AREA|DESC|FOTO|RESP|PART|DEPTO|COMMENT|FOTO_LEV|ESTADO|CÓDIGO|QR_placeholder|FECHA
   hoja.appendRow([
-    datos.subarea,        // columna AREA = sub area
-    datos.descripcion,
-    datos.urlFoto,        // se reemplaza por IMAGE() abajo
-    datos.responsable,
-    datos.participantes,
-    datos.departamento,
-    '',                   // Comentario - se llena manualmente en el sheet
-    '',                   // Foto levantamiento - se llena manualmente
-    datos.estado,
-    id,
-    datos.fecha
+    datos.subarea, datos.descripcion, datos.urlFoto,
+    datos.responsable, datos.participantes, datos.departamento,
+    '', '', datos.estado,
+    codigo, '', datos.fecha
   ]);
 
   const fila = hoja.getLastRow();
 
-  // Imagen visible en columna 3
+  // Imagen evidencia (col 3)
   hoja.getRange(fila, 3).setFormula('=IMAGE("' + datos.urlFoto + '",4,130,200)');
+  // QR legible (col 11)
+  const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=90x90&data=' + encodeURIComponent(codigo);
+  hoja.getRange(fila, COL_QR).setFormula('=IMAGE("' + qrUrl + '",4,80,80)');
+
   hoja.setRowHeight(fila, 150);
 
-  // Formato de la fila
   hoja.getRange(fila, 1, 1, 9)
-    .setVerticalAlignment('middle')
-    .setFontSize(10)
-    .setWrap(true)
+    .setVerticalAlignment('middle').setFontSize(10).setWrap(true)
     .setBorder(true, true, true, true, true, true, '#CCCCCC', SpreadsheetApp.BorderStyle.SOLID);
+
+  // Código: negrita centrado
+  hoja.getRange(fila, COL_ID_INTERNO)
+    .setFontWeight('bold').setHorizontalAlignment('center')
+    .setVerticalAlignment('middle').setFontSize(10);
 
   if (fila % 2 !== 0) hoja.getRange(fila, 1, 1, 9).setBackground('#F7F9FC');
 
   colorearEstado(hoja, fila, datos.estado);
   aplicarFiltroMes(hoja);
 
-  return id;
+  return codigo;
 }
 
 // =============================================
@@ -164,7 +197,7 @@ function inicializarHoja(hoja, area) {
 
   // Fila 1: Titulo estilo Walk Through
   hoja.appendRow([HOTEL_NOMBRE + ' - WALK THROUGH - ' + mesActual.toUpperCase()]);
-  hoja.getRange(FILA_TITULO, 1, 1, 9).merge()
+  hoja.getRange(FILA_TITULO, 1, 1, 11).merge()
     .setBackground('#7B1827').setFontColor('#FFFFFF')
     .setFontWeight('bold').setFontSize(16)
     .setHorizontalAlignment('center').setVerticalAlignment('middle');
@@ -196,7 +229,7 @@ function configurarFiltroMes(hoja) {
   hoja.getRange(FILA_FILTRO, 3).setValue('← Selecciona un mes')
     .setFontColor('#AAAAAA').setFontStyle('italic');
 
-  hoja.getRange(FILA_FILTRO, 1, 1, 9).setBackground('#7F8C8D');
+  hoja.getRange(FILA_FILTRO, 1, 1, 11).setBackground('#7F8C8D');
   hoja.setRowHeight(FILA_FILTRO, 40);
 }
 
@@ -250,7 +283,7 @@ function actualizarTitulo(hoja) {
 // Formato cabeceras (fila 3) - identico al Walk Through
 // =============================================
 function formatearCabeceras(hoja) {
-  hoja.getRange(FILA_CABECERAS, 1, 1, 9)
+  hoja.getRange(FILA_CABECERAS, 1, 1, 11)
     .setBackground('#7B1827').setFontColor('#FFFFFF')
     .setFontWeight('bold').setFontSize(11)
     .setHorizontalAlignment('center').setVerticalAlignment('middle')
@@ -259,19 +292,21 @@ function formatearCabeceras(hoja) {
   hoja.setFrozenRows(FILA_CABECERAS);
 
   // Anchos de columna
-  hoja.setColumnWidth(1, 180);  // AREA
-  hoja.setColumnWidth(2, 280);  // DESCRIPCION DE HALLAZGO
-  hoja.setColumnWidth(3, 220);  // REGISTRO FOTOGRAFICO
-  hoja.setColumnWidth(4, 160);  // RESPONSABLE
-  hoja.setColumnWidth(5, 200);  // PARTICIPANTES
-  hoja.setColumnWidth(6, 160);  // DEPARTAMENTO
-  hoja.setColumnWidth(7, 280);  // COMENTARIO RESPUESTA
-  hoja.setColumnWidth(8, 220);  // FOTO LEVANTAMIENTO
-  hoja.setColumnWidth(9, 140);  // ESTADO
+  hoja.setColumnWidth(1,  180);  // AREA
+  hoja.setColumnWidth(2,  280);  // DESCRIPCION DE HALLAZGO
+  hoja.setColumnWidth(3,  220);  // REGISTRO FOTOGRAFICO
+  hoja.setColumnWidth(4,  160);  // RESPONSABLE
+  hoja.setColumnWidth(5,  200);  // PARTICIPANTES
+  hoja.setColumnWidth(6,  160);  // DEPARTAMENTO
+  hoja.setColumnWidth(7,  280);  // COMENTARIO RESPUESTA
+  hoja.setColumnWidth(8,  220);  // FOTO LEVANTAMIENTO
+  hoja.setColumnWidth(9,  140);  // ESTADO
+  hoja.setColumnWidth(10, 140);  // CÓDIGO
+  hoja.setColumnWidth(11, 110);  // QR
 
-  // Ocultar columnas internas
-  hoja.hideColumns(10);
-  hoja.hideColumns(11);
+  // Mostrar cols visibles, ocultar fecha (col 12)
+  hoja.showColumns(10, 2);
+  hoja.hideColumns(12);
 }
 
 // =============================================
@@ -427,7 +462,7 @@ function reformatearHoja() {
 
     if (!v1.includes('WALK THROUGH') && !v1.includes(HOTEL_NOMBRE)) {
       hoja.insertRowBefore(1);
-      hoja.getRange(1, 1, 1, 9).merge()
+      hoja.getRange(1, 1, 1, 11).merge()
         .setValue(HOTEL_NOMBRE + ' - WALK THROUGH - ' + mesActual.toUpperCase())
         .setBackground('#7B1827').setFontColor('#FFFFFF')
         .setFontWeight('bold').setFontSize(16)
@@ -442,7 +477,7 @@ function reformatearHoja() {
 
     if (String(hoja.getRange(3, 1).getValue()) !== 'AREA') {
       hoja.insertRowBefore(3);
-      hoja.getRange(3, 1, 1, 9).setValues([CABECERAS]);
+      hoja.getRange(3, 1, 1, 11).setValues([CABECERAS]);
     }
 
     formatearCabeceras(hoja);
@@ -460,6 +495,67 @@ function reformatearHoja() {
 
     Logger.log('Reformateada: ' + hoja.getName());
   });
+}
+
+// =============================================
+// BUSCAR OBSERVACIÓN POR CÓDIGO
+// =============================================
+function buscarPorCodigo(codigo) {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  for (const hoja of ss.getSheets()) {
+    const ultima = hoja.getLastRow();
+    if (ultima < FILA_DATOS) continue;
+    for (let i = FILA_DATOS; i <= ultima; i++) {
+      const cod = String(hoja.getRange(i, COL_ID_INTERNO).getValue()).trim().toUpperCase();
+      if (cod === codigo) {
+        const fotoFormula = hoja.getRange(i, 3).getFormula();
+        const fotoMatch   = fotoFormula.match(/=IMAGE\("([^"]+)"/i);
+        const levFormula  = hoja.getRange(i, 8).getFormula();
+        const levMatch    = levFormula  ? levFormula.match(/=IMAGE\("([^"]+)"/i) : null;
+        return {
+          codigo:      cod,
+          hoja:        hoja.getName(),
+          fila:        i,
+          area:        hoja.getRange(i, 1).getValue(),
+          descripcion: hoja.getRange(i, 2).getValue(),
+          urlFoto:     fotoMatch ? fotoMatch[1] : '',
+          responsable: hoja.getRange(i, 4).getValue(),
+          estado:      hoja.getRange(i, 9).getValue(),
+          comentario:  hoja.getRange(i, 7).getValue(),
+          urlFotoLev:  levMatch  ? levMatch[1]  : ''
+        };
+      }
+    }
+  }
+  return null;
+}
+
+// =============================================
+// LEVANTAR OBSERVACIÓN (actualiza fila existente)
+// =============================================
+function levantarObservacion(codigo, comentario, fotoBase64, estado) {
+  const encontrado = buscarPorCodigo(codigo);
+  if (!encontrado) return { resultado: 'no_encontrado' };
+
+  const ss   = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const hoja = ss.getSheetByName(encontrado.hoja);
+  const fila = encontrado.fila;
+
+  // Comentario (col 7)
+  if (comentario) hoja.getRange(fila, 7).setValue(comentario);
+
+  // Foto levantamiento (col 8)
+  if (fotoBase64) {
+    const fotoInfo = guardarFotoEnDrive(fotoBase64);
+    hoja.getRange(fila, 8).setFormula('=IMAGE("' + fotoInfo.url + '",4,130,200)');
+  }
+
+  // Estado (col 9)
+  const nuevoEstado = estado || 'Corregido';
+  hoja.getRange(fila, 9).setValue(nuevoEstado);
+  colorearEstado(hoja, fila, nuevoEstado);
+
+  return { resultado: 'ok', codigo, hoja: encontrado.hoja, fila };
 }
 
 // =============================================
