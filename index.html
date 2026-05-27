@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Control de Evidencias</title>
 <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/1828/1828884.png">
+codex/add-3d-icons-for-assigned-users-m3q4ak
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#1A3C5E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Evidencias">
+<link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1828/1828884.png">
+main
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Inter:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -603,6 +611,11 @@
 
 <!-- CONTENIDO PRINCIPAL -->
 <main class="app-body">
+  <button class="btn-enviar" id="btnInstalarApp" onclick="instalarApp()" style="display:none;margin-bottom:12px;background:#1A7F54;">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px;height:20px"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><rect x="4" y="17" width="16" height="4" rx="1.5"/></svg>
+    Instalar App
+  </button>
+
 
   <!-- ZONA FOTO -->
   <div class="section-label">
@@ -977,6 +990,33 @@
 </div>
 
 <script>
+  let installPromptEvent = null;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    installPromptEvent = e;
+    const btn = document.getElementById('btnInstalarApp');
+    if (btn) btn.style.display = 'flex';
+  });
+
+  async function instalarApp() {
+    if (!installPromptEvent) {
+      mostrarToast('En iPhone: Compartir > Agregar a pantalla de inicio', 'success');
+      return;
+    }
+    installPromptEvent.prompt();
+    await installPromptEvent.userChoice;
+    installPromptEvent = null;
+    const btn = document.getElementById('btnInstalarApp');
+    if (btn) btn.style.display = 'none';
+  }
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    });
+  }
+
   // =============================================
   // CONFIGURACION - Cambia esta URL por la de tu Apps Script
   // =============================================
