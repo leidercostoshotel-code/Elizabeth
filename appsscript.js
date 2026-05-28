@@ -875,6 +875,28 @@ function enviarEmailLevantamiento(codigo, comentario, estado, emailUsuario, nomb
 // =============================================
 // TEST
 // =============================================
+function testEmail() {
+  const cfg = _brevoCfg();
+  Logger.log('API Key: ' + (cfg.apiKey ? 'OK (' + cfg.apiKey.substring(0,10) + '...)' : 'VACÍA'));
+  Logger.log('Sender: ' + (cfg.senderEmail || 'VACÍO'));
+  if (!cfg.apiKey || !cfg.senderEmail) {
+    Logger.log('ERROR: Faltan Script Properties');
+    return;
+  }
+  const resp = UrlFetchApp.fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'post',
+    headers: { 'api-key': cfg.apiKey, 'Content-Type': 'application/json' },
+    payload: JSON.stringify({
+      sender: { name: BREVO_SENDER_NAME, email: cfg.senderEmail },
+      to: [{ email: cfg.senderEmail }],
+      subject: '✅ Test Walk Through - Email funcionando',
+      htmlContent: '<h2 style="color:#7B1827">Walk Through · Swissotel Lima</h2><p>El sistema de emails está funcionando correctamente.</p>'
+    }),
+    muteHttpExceptions: true
+  });
+  Logger.log('Respuesta Brevo: ' + resp.getResponseCode() + ' - ' + resp.getContentText());
+}
+
 function testManual() {
   guardarEnSheets({
     fecha: new Date().toLocaleString('es-PE'), area: 'Banquetes',
