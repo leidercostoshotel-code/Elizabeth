@@ -8,13 +8,18 @@ const CARPETA_NOMBRE = 'Evidencias Fotograficas';
 const HOTEL_NOMBRE   = 'Swissotel Lima Peru';
 
 // ── Email (Brevo) ──────────────────────────────────────────────────────────
-// 1. Crea cuenta gratis en https://app.brevo.com  (300 emails/día gratis)
-// 2. Ve a  Configuración → API Keys → Genera una clave y pégala aquí
-// 3. Ve a  Remitentes → Añade un correo (ej. walkthrough@gmail.com) y verifícalo
-// 4. Pon ese correo en BREVO_SENDER_EMAIL
-const BREVO_API_KEY     = 'PEGA_TU_API_KEY_AQUI';
+// Guarda las claves en Script Properties (no en el código):
+//   Apps Script Editor → Configuración del proyecto → Propiedades del script
+//   Agrega: BREVO_API_KEY  y  BREVO_SENDER_EMAIL
 const BREVO_SENDER_NAME  = 'Walk Through · Swissotel Lima';
-const BREVO_SENDER_EMAIL = 'PEGA_TU_CORREO_REMITENTE_AQUI';  // correo verificado en Brevo
+
+function _brevoCfg() {
+  const props = PropertiesService.getScriptProperties();
+  return {
+    apiKey:      props.getProperty('BREVO_API_KEY')      || '',
+    senderEmail: props.getProperty('BREVO_SENDER_EMAIL') || ''
+  };
+}
 
 const MESES = [
   'Enero','Febrero','Marzo','Abril','Mayo','Junio',
@@ -682,12 +687,13 @@ function recuperarPerfilDesdeSheets(email, pin) {
 // EMAILS DE NOTIFICACIÓN  (via Brevo)
 // =============================================
 function enviarEmailBrevo(destinatario, asunto, htmlBody) {
-  if (!BREVO_API_KEY || BREVO_API_KEY === 'PEGA_TU_API_KEY_AQUI') return;
+  const cfg = _brevoCfg();
+  if (!cfg.apiKey || !cfg.senderEmail) return;
   UrlFetchApp.fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'post',
-    headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' },
+    headers: { 'api-key': cfg.apiKey, 'Content-Type': 'application/json' },
     payload: JSON.stringify({
-      sender: { name: BREVO_SENDER_NAME, email: BREVO_SENDER_EMAIL },
+      sender: { name: BREVO_SENDER_NAME, email: cfg.senderEmail },
       to: [{ email: destinatario }],
       subject: asunto,
       htmlContent: htmlBody
