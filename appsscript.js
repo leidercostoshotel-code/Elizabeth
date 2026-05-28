@@ -12,6 +12,9 @@ const BREVO_API_KEY      = 'TU_API_KEY_BREVO';
 const BREVO_SENDER_EMAIL = 'TU_CORREO_REMITENTE';
 const BREVO_SENDER_NAME  = 'Walk Through · Swissotel Lima';
 
+// ── Seguridad ─────────────────────────────────────────────────────────────
+const APP_TOKEN = 'wts-2026-k9x7m';
+
 const MESES = [
   'Enero','Febrero','Marzo','Abril','Mayo','Junio',
   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
@@ -89,15 +92,16 @@ function doGet(e) {
 function doPost(e) {
   try {
     const p = JSON.parse(e.postData.contents);
+    if (p.appToken !== APP_TOKEN) return buildResponse({ resultado: 'error', error: 'No autorizado' });
 
     // Acción: registrar usuario (nombre + email + sección + PIN para recuperación multi-dispositivo)
     if (p.action === 'registrarUsuario') {
-      return buildResponse(registrarUsuarioEnSheets(p.nombre || '', p.seccion || '', p.pin || '', p.email || ''));
+      return buildResponse(registrarUsuarioEnSheets(p.nombre || '', p.seccion || '', p.pinHash || p.pin || '', p.email || ''));
     }
 
-    // Acción: recuperar perfil desde otro dispositivo (verifica nombre + PIN)
+    // Acción: recuperar perfil desde otro dispositivo (verifica email + pinHash)
     if (p.action === 'recuperarPerfil') {
-      return buildResponse(recuperarPerfilDesdeSheets(p.email || '', p.pin || ''));
+      return buildResponse(recuperarPerfilDesdeSheets(p.email || '', p.pinHash || p.pin || ''));
     }
 
     // Acción: levantar observación existente
