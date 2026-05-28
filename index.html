@@ -2382,7 +2382,6 @@
     sessionStorage.setItem(SESION_APP_KEY, '1');
     fetch(SCRIPT_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'registrarUsuario', nombre, email, seccion, pin })
     }).catch(() => {});
     entrarApp({ nombre, email, seccion });
@@ -2400,7 +2399,6 @@
     try {
       const r = await fetch(SCRIPT_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'recuperarPerfil', email, pin })
       });
       const d = await r.json();
@@ -2473,7 +2471,6 @@
       try {
         const r = await fetch(SCRIPT_URL, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ action: 'recuperarPerfil', email, pin })
         });
         const d = await r.json();
