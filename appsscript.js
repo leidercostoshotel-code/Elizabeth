@@ -85,6 +85,16 @@ function doPost(e) {
   try {
     const p = JSON.parse(e.postData.contents);
 
+    // Acción: registrar usuario (nombre + sección + PIN para recuperación multi-dispositivo)
+    if (p.action === 'registrarUsuario') {
+      return buildResponse(registrarUsuarioEnSheets(p.nombre || '', p.seccion || '', p.pin || ''));
+    }
+
+    // Acción: recuperar perfil desde otro dispositivo (verifica nombre + PIN)
+    if (p.action === 'recuperarPerfil') {
+      return buildResponse(recuperarPerfilDesdeSheets(p.nombre || '', p.pin || ''));
+    }
+
     // Acción: levantar observación existente
     if (p.action === 'levantar') {
       const out = levantarObservacion(
@@ -386,6 +396,9 @@ function filtrarCopiaParaExportacion(ss, opts) {
   const hastaDate = opts.hasta ? new Date(opts.hasta + 'T23:59:59') : null;
 
   ss.getSheets().forEach(hoja => {
+    // Nunca incluir hoja de usuarios en el reporte
+    if (hoja.getName() === 'Usuarios') { ss.deleteSheet(hoja); return; }
+
     const ultima = hoja.getLastRow();
     if (ultima < FILA_DATOS) return;
 
@@ -556,6 +569,96 @@ function levantarObservacion(codigo, comentario, fotoBase64, estado) {
   colorearEstado(hoja, fila, nuevoEstado);
 
   return { resultado: 'ok', codigo, hoja: encontrado.hoja, fila };
+}
+
+// =============================================
+// REGISTRO DE USUARIOS
+// =============================================
+function registrarUsuarioEnSheets(nombre, seccion, pin) {
+  if (!nombre || !seccion) return { resultado: 'error', error: 'Nombre y sección requeridos' };
+
+  const ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
+  let hoja    = ss.getSheetByName('Usuarios');
+
+  // Crear hoja si no existe
+  if (!hoja) {
+    hoja = ss.insertSheet('Usuarios');
+    hoja.setTabColor('#1A7F54');
+
+    hoja.getRange(1, 1, 1, 5).merge()
+        .setValue('USUARIOS REGISTRADOS — Walk Through · Swissotel Lima Peru')
+        .setBackground('#1A7F54')
+        .setFontColor('#FFFFFF')
+        .setFontFamily('Montserrat')
+        .setFontWeight('bold')
+        .setFontSize(13)
+        .setHorizontalAlignment('center')
+        .setVerticalAlignment('middle');
+    hoja.setRowHeight(1, 36);
+
+    const cabs = ['NOMBRE', 'SECCIÓN', 'PIN', 'FECHA REGISTRO', 'ÚLTIMO ACCESO'];
+    hoja.getRange(2, 1, 1, 5).setValues([cabs])
+        .setBackground('#145A32')
+        .setFontColor('#FFFFFF')
+        .setFontWeight('bold')
+        .setFontSize(11)
+        .setHorizontalAlignment('center');
+    hoja.setRowHeight(2, 30);
+
+    hoja.setColumnWidth(1, 220);
+    hoja.setColumnWidth(2, 140);
+    hoja.setColumnWidth(3, 80);
+    hoja.setColumnWidth(4, 180);
+    hoja.setColumnWidth(5, 180);
+    hoja.setFrozenRows(2);
+  }
+
+  const ahora  = new Date().toLocaleString('es-PE');
+  const ultimo = hoja.getLastRow();
+
+  // Buscar si ya existe el usuario (desde fila 3)
+  if (ultimo >= 3) {
+    const datos = hoja.getRange(3, 1, ultimo - 2, 5).getValues();
+    for (let i = 0; i < datos.length; i++) {
+      if (String(datos[i][0]).trim().toLowerCase() === nombre.trim().toLowerCase()) {
+        const fila = i + 3;
+        hoja.getRange(fila, 2).setValue(seccion);
+        if (pin) hoja.getRange(fila, 3).setValue(pin);
+        hoja.getRange(fila, 5).setValue(ahora);
+        return { resultado: 'ok', accion: 'actualizado' };
+      }
+    }
+  }
+
+  // Usuario nuevo
+  const nuevaFila = hoja.getLastRow() + 1;
+  hoja.appendRow([nombre, seccion, pin || '', ahora, ahora]);
+  const color = (nuevaFila % 2 === 0) ? '#EAF7EF' : '#FFFFFF';
+  hoja.getRange(nuevaFila, 1, 1, 5).setBackground(color).setFontSize(11);
+
+  return { resultado: 'ok', accion: 'registrado' };
+}
+
+function recuperarPerfilDesdeSheets(nombre, pin) {
+  if (!nombre || !pin) return { resultado: 'error', error: 'Nombre y PIN requeridos' };
+
+  const ss   = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const hoja = ss.getSheetByName('Usuarios');
+  if (!hoja || hoja.getLastRow() < 3)
+    return { resultado: 'error', error: 'No se encontró el perfil. Crea uno nuevo.' };
+
+  const datos = hoja.getRange(3, 1, hoja.getLastRow() - 2, 5).getValues();
+  for (const fila of datos) {
+    if (String(fila[0]).trim().toLowerCase() === nombre.trim().toLowerCase()) {
+      if (String(fila[2]).trim() !== String(pin).trim())
+        return { resultado: 'error', error: 'PIN incorrecto' };
+      // Actualizar último acceso
+      const idx = datos.indexOf(fila) + 3;
+      hoja.getRange(idx, 5).setValue(new Date().toLocaleString('es-PE'));
+      return { resultado: 'ok', nombre: fila[0], seccion: fila[1], pin: fila[2] };
+    }
+  }
+  return { resultado: 'error', error: 'Nombre no encontrado. Verifica o crea un perfil nuevo.' };
 }
 
 // =============================================
