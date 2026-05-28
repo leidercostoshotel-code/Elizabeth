@@ -176,18 +176,32 @@ function guardarEnSheets(datos) {
     inicializarHoja(hoja, area);
   }
 
+  // Anti-duplicado: si viene idEnvio, verificar que no exista ya en col 13
+  if (datos.idEnvio) {
+    const ultima = hoja.getLastRow();
+    if (ultima >= FILA_DATOS) {
+      const ids = hoja.getRange(FILA_DATOS, 13, ultima - FILA_DATOS + 1, 1).getValues();
+      for (const [id] of ids) {
+        if (String(id) === String(datos.idEnvio)) {
+          const codigoExistente = hoja.getRange(FILA_DATOS + ids.findIndex(r => String(r[0]) === String(datos.idEnvio)), COL_ID_INTERNO).getValue();
+          return codigoExistente; // ya guardado, devolver código existente
+        }
+      }
+    }
+  }
+
   // Mostrar todas las filas antes de agregar
-  const ultima = hoja.getLastRow();
-  if (ultima >= FILA_DATOS) hoja.showRows(FILA_DATOS, ultima - FILA_DATOS + 1);
+  const ultima2 = hoja.getLastRow();
+  if (ultima2 >= FILA_DATOS) hoja.showRows(FILA_DATOS, ultima2 - FILA_DATOS + 1);
 
   const codigo = generarCodigo(datos.subarea || datos.area, hoja);
 
-  // Cols: AREA|DESC|FOTO|RESP|PART|DEPTO|COMMENT|FOTO_LEV|ESTADO|CÓDIGO|QR_placeholder|FECHA
+  // Cols: AREA|DESC|FOTO|RESP|PART|DEPTO|COMMENT|FOTO_LEV|ESTADO|CÓDIGO|QR|FECHA|ID_ENVIO
   hoja.appendRow([
     datos.subarea, datos.descripcion, datos.urlFoto,
     datos.responsable, datos.participantes, datos.departamento,
     '', '', datos.estado,
-    codigo, '', datos.fecha
+    codigo, '', datos.fecha, datos.idEnvio || ''
   ]);
 
   const fila = hoja.getLastRow();

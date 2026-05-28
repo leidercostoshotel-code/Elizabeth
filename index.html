@@ -1834,7 +1834,9 @@
 
     const fecha = new Date().toLocaleString('es-PE', { timeZone: 'America/Lima' });
 
+    const idEnvio = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
     const payload = {
+      idEnvio,
       fecha,
       area,
       subarea,
@@ -1851,11 +1853,15 @@
     payload.appToken = APP_TOKEN;
 
     try {
-      setProgreso(60);
+      setProgreso(30);
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 300000); // 5 min timeout
       const res = await fetch(SCRIPT_URL, {
         method: 'POST',
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: controller.signal
       });
+      clearTimeout(timer);
       setProgreso(90);
       const data = await res.json();
       setProgreso(100);
