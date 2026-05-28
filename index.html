@@ -652,8 +652,99 @@
   </div>
 </div>
 
+<!-- OVERLAY INICIO DE SESIÓN / REGISTRO -->
+<div id="appStartOverlay" style="position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px">
+  <img src="./swissotel_lima_cover.jpeg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 40%">
+  <div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(123,24,39,.92) 0%,rgba(60,10,18,.97) 100%)"></div>
+
+  <!-- Card central -->
+  <div style="position:relative;z-index:1;width:100%;max-width:360px;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.45);animation:slideUp .3s ease">
+
+    <!-- Marca superior -->
+    <div style="background:var(--primary);padding:24px 20px 20px;text-align:center">
+      <img src="./logoQSF.png" alt="QSF" style="height:52px;width:auto;object-fit:contain;background:#fff;border-radius:10px;padding:6px 10px;margin-bottom:12px">
+      <div style="font-family:Montserrat,sans-serif;font-weight:900;font-size:20px;color:#fff;letter-spacing:.5px">Walk Through</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:2px">Swissotel Lima Peru</div>
+    </div>
+
+    <!-- VISTA REGISTRO -->
+    <div id="regVista" style="padding:24px">
+      <div style="font-weight:700;font-size:16px;color:var(--text);margin-bottom:4px">Crea tu perfil</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:20px">Solo la primera vez — luego solo usas tu PIN</div>
+
+      <div style="margin-bottom:14px">
+        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Tu nombre</label>
+        <input id="regNombre" type="text" placeholder="Escribe tu nombre completo"
+          style="width:100%;box-sizing:border-box;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;outline:none;font-family:inherit;color:var(--text)">
+      </div>
+
+      <div style="margin-bottom:14px">
+        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Tu sección</label>
+        <select id="regSeccion" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;outline:none;font-family:inherit;color:var(--text);background:#fff;appearance:none">
+          <option value="">Selecciona tu sección...</option>
+          <option>Mantenimiento</option><option>Cocina</option>
+          <option>Limpieza</option><option>Sistemas</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom:14px">
+        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">PIN de acceso (4 dígitos)</label>
+        <div style="display:flex;gap:8px">
+          <input id="regPin" type="password" inputmode="numeric" maxlength="4" placeholder="••••"
+            style="flex:1;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:22px;outline:none;font-family:inherit;letter-spacing:8px;text-align:center">
+          <input id="regPinConf" type="password" inputmode="numeric" maxlength="4" placeholder="••••"
+            style="flex:1;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:22px;outline:none;font-family:inherit;letter-spacing:8px;text-align:center">
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;text-align:center">Confirma tu PIN a la derecha</div>
+      </div>
+
+      <div id="regError" style="display:none;padding:10px;background:#FEE2E2;border-radius:8px;color:#B91C1C;font-size:13px;font-weight:600;text-align:center;margin-bottom:12px"></div>
+      <button onclick="registrarse()" style="width:100%;padding:14px;background:var(--primary);color:#fff;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit">
+        Crear perfil e ingresar
+      </button>
+    </div>
+
+    <!-- VISTA LOGIN -->
+    <div id="loginVista" style="display:none;padding:24px">
+      <div style="text-align:center;margin-bottom:20px">
+        <div id="loginAvatar" style="width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;margin:0 auto 10px"></div>
+        <div id="loginNombreText" style="font-weight:700;font-size:17px;color:var(--text)"></div>
+        <div id="loginSeccionText" style="font-size:12px;color:var(--muted);margin-top:2px"></div>
+      </div>
+
+      <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px;text-align:center">Ingresa tu PIN</label>
+      <div style="position:relative;margin-bottom:6px">
+        <input id="loginPin" type="password" inputmode="numeric" maxlength="4" placeholder="• • • •"
+          autocomplete="off"
+          onkeydown="if(event.key==='Enter')iniciarSesion()"
+          oninput="if(this.value.length===4)iniciarSesion()"
+          style="width:100%;box-sizing:border-box;padding:16px;border:2px solid var(--border);border-radius:12px;font-size:28px;letter-spacing:16px;text-align:center;outline:none;font-family:inherit">
+      </div>
+
+      <div id="loginError" style="display:none;padding:10px;background:#FEE2E2;border-radius:8px;color:#B91C1C;font-size:13px;font-weight:600;text-align:center;margin-bottom:12px"></div>
+      <button onclick="iniciarSesion()" style="width:100%;padding:14px;background:var(--primary);color:#fff;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit;margin-bottom:10px">
+        Ingresar
+      </button>
+      <button onclick="cambiarPerfil()" style="width:100%;padding:10px;background:none;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit">
+        No soy yo — cambiar perfil
+      </button>
+    </div>
+
+  </div>
+</div>
+
 <!-- CONTENIDO PRINCIPAL -->
 <main class="app-body">
+  <!-- Badge de perfil activo -->
+  <div id="perfilBadge" style="display:none;background:#fff;border-radius:14px;padding:10px 14px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.07);display:flex;align-items:center;gap:10px">
+    <div id="perfilAvatar" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff"></div>
+    <div style="flex:1;min-width:0">
+      <div id="perfilNombreLabel" style="font-size:13px;font-weight:700;color:var(--text)"></div>
+      <div id="perfilSeccionLabel" style="font-size:11px;color:var(--muted)"></div>
+    </div>
+    <button onclick="cerrarSesion()" style="background:none;border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;color:var(--muted);cursor:pointer;font-family:inherit;white-space:nowrap">Salir</button>
+  </div>
+
   <button class="btn-enviar" id="btnInstalarApp" onclick="instalarApp()" style="display:none;margin-bottom:12px;background:#1A7F54;">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width:20px;height:20px"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><rect x="4" y="17" width="16" height="4" rx="1.5"/></svg>
     Instalar App
@@ -893,7 +984,7 @@
     <textarea class="field-textarea" id="campo-descripcion" placeholder="Describe el hallazgo o condicion observada..."></textarea>
   </div>
 
-  <div class="field-group">
+  <div class="field-group" id="grupoResponsable">
     <div class="field-label">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
       Responsable
@@ -1085,7 +1176,7 @@
   </div>
 
   <!-- SECCION (pestaña Excel) -->
-  <div class="field-group">
+  <div class="field-group" id="grupoSeccion">
     <div class="field-label">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
       Sección
@@ -1975,15 +2066,19 @@
     const zone = document.getElementById('photoZone');
     zone.classList.remove('has-photo');
     zone.onclick = () => abrirGaleria();
-    document.getElementById('campo-area').value = '';
-    document.getElementById('campo-area-texto').value = '';
+    // Sección y Responsable: solo limpiar si NO hay perfil activo
+    const _perfil = obtenerPerfil();
+    if (!_perfil || !sessionStorage.getItem(SESION_APP_KEY)) {
+      document.getElementById('campo-area').value = '';
+      document.getElementById('campo-area-texto').value = '';
+      document.getElementById('campo-responsable').value = '';
+      document.getElementById('campo-responsable-texto').value = '';
+    }
     document.querySelectorAll('.area-opcion').forEach(o => o.classList.remove('seleccionado'));
     document.getElementById('campo-subarea').value = '';
     document.getElementById('campo-subarea-texto').value = '';
     document.querySelectorAll('#subareaLista .area-opcion').forEach(o => o.classList.remove('seleccionado'));
     document.getElementById('campo-descripcion').value = '';
-    document.getElementById('campo-responsable').value = '';
-    document.getElementById('campo-responsable-texto').value = '';
     document.querySelectorAll('#responsableLista .area-opcion').forEach(o => o.classList.remove('seleccionado'));
     document.getElementById('campo-participantes').value = '';
     document.getElementById('partCustomInput').value = '';
@@ -1999,6 +2094,127 @@
       document.getElementById('chip-' + t).className = 'estado-chip';
     });
   }
+
+  // =============================================
+  // PERFIL Y SESIÓN DE USUARIO
+  // =============================================
+  const PERFIL_KEY    = 'wt_perfil';
+  const SESION_APP_KEY = 'wt_sesion_app';
+  const AVATAR_COLORES = ['#7B1827','#0F766E','#7C3AED','#B45309','#0369A1','#BE185D','#15803D'];
+
+  function avatarColor(nombre) {
+    let n = 0; for (const c of nombre) n += c.charCodeAt(0);
+    return AVATAR_COLORES[n % AVATAR_COLORES.length];
+  }
+  function iniciales(nombre) {
+    const p = nombre.trim().split(/\s+/);
+    return (p[0][0] + (p[1] ? p[1][0] : '')).toUpperCase();
+  }
+  function obtenerPerfil() {
+    try { return JSON.parse(localStorage.getItem(PERFIL_KEY)); } catch { return null; }
+  }
+
+  function initApp() {
+    const perfil = obtenerPerfil();
+    if (!perfil) {
+      document.getElementById('regVista').style.display = 'block';
+      document.getElementById('loginVista').style.display = 'none';
+      document.getElementById('appStartOverlay').style.display = 'flex';
+    } else if (!sessionStorage.getItem(SESION_APP_KEY)) {
+      mostrarLoginVista(perfil);
+      document.getElementById('appStartOverlay').style.display = 'flex';
+    } else {
+      entrarApp(perfil);
+    }
+  }
+
+  function mostrarLoginVista(perfil) {
+    document.getElementById('regVista').style.display = 'none';
+    document.getElementById('loginVista').style.display = 'block';
+    const col = avatarColor(perfil.nombre);
+    document.getElementById('loginAvatar').style.background = col;
+    document.getElementById('loginAvatar').textContent = iniciales(perfil.nombre);
+    document.getElementById('loginNombreText').textContent = perfil.nombre;
+    document.getElementById('loginSeccionText').textContent = '📋 ' + perfil.seccion;
+    document.getElementById('loginPin').value = '';
+    document.getElementById('loginError').style.display = 'none';
+    setTimeout(() => document.getElementById('loginPin').focus(), 300);
+  }
+
+  function registrarse() {
+    const nombre  = document.getElementById('regNombre').value.trim();
+    const seccion = document.getElementById('regSeccion').value;
+    const pin     = document.getElementById('regPin').value;
+    const pinConf = document.getElementById('regPinConf').value;
+    const errEl   = document.getElementById('regError');
+    errEl.style.display = 'none';
+    if (!nombre)          { errEl.textContent = 'Ingresa tu nombre completo'; errEl.style.display = 'block'; return; }
+    if (!seccion)         { errEl.textContent = 'Selecciona tu sección'; errEl.style.display = 'block'; return; }
+    if (pin.length !== 4) { errEl.textContent = 'El PIN debe tener exactamente 4 dígitos'; errEl.style.display = 'block'; return; }
+    if (pin !== pinConf)  { errEl.textContent = 'Los PINs no coinciden'; errEl.style.display = 'block'; return; }
+    if (!/^\d{4}$/.test(pin)) { errEl.textContent = 'El PIN debe contener solo números'; errEl.style.display = 'block'; return; }
+    localStorage.setItem(PERFIL_KEY, JSON.stringify({ nombre, seccion, pin }));
+    sessionStorage.setItem(SESION_APP_KEY, '1');
+    entrarApp({ nombre, seccion });
+  }
+
+  function iniciarSesion() {
+    const perfil = obtenerPerfil();
+    const pin    = document.getElementById('loginPin').value;
+    const errEl  = document.getElementById('loginError');
+    if (pin !== perfil.pin) {
+      errEl.textContent = 'PIN incorrecto. Inténtalo de nuevo.';
+      errEl.style.display = 'block';
+      document.getElementById('loginPin').value = '';
+      document.getElementById('loginPin').focus();
+      return;
+    }
+    sessionStorage.setItem(SESION_APP_KEY, '1');
+    entrarApp(perfil);
+  }
+
+  function entrarApp(perfil) {
+    document.getElementById('appStartOverlay').style.display = 'none';
+
+    // Auto-rellenar y ocultar campos del perfil
+    document.getElementById('campo-responsable').value       = perfil.nombre;
+    document.getElementById('campo-responsable-texto').value = perfil.nombre;
+    document.getElementById('campo-area').value              = perfil.seccion;
+    document.getElementById('campo-area-texto').value        = perfil.seccion;
+    document.getElementById('grupoResponsable').style.display = 'none';
+    document.getElementById('grupoSeccion').style.display     = 'none';
+
+    // Badge de perfil
+    const col = avatarColor(perfil.nombre);
+    document.getElementById('perfilAvatar').style.background = col;
+    document.getElementById('perfilAvatar').textContent = iniciales(perfil.nombre);
+    document.getElementById('perfilNombreLabel').textContent = perfil.nombre;
+    document.getElementById('perfilSeccionLabel').textContent = '📋 Sección: ' + perfil.seccion;
+    document.getElementById('perfilBadge').style.display = 'flex';
+  }
+
+  function cerrarSesion() {
+    sessionStorage.removeItem(SESION_APP_KEY);
+    const perfil = obtenerPerfil();
+    if (perfil) mostrarLoginVista(perfil);
+    document.getElementById('appStartOverlay').style.display = 'flex';
+  }
+
+  function cambiarPerfil() {
+    if (!confirm('¿Deseas cambiar de perfil? Tendrás que volver a registrarte.')) return;
+    localStorage.removeItem(PERFIL_KEY);
+    sessionStorage.removeItem(SESION_APP_KEY);
+    document.getElementById('regNombre').value = '';
+    document.getElementById('regSeccion').value = '';
+    document.getElementById('regPin').value = '';
+    document.getElementById('regPinConf').value = '';
+    document.getElementById('regVista').style.display = 'block';
+    document.getElementById('loginVista').style.display = 'none';
+    document.getElementById('appStartOverlay').style.display = 'flex';
+  }
+
+  // Iniciar al cargar la página
+  window.addEventListener('load', initApp);
 
   // =============================================
   // HISTORIAL LOCAL (localStorage por dispositivo)
