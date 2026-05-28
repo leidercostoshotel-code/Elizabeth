@@ -678,7 +678,7 @@ function recuperarPerfilDesdeSheets(email, pin) {
 // EMAILS DE NOTIFICACIÓN  (via Brevo)
 // =============================================
 function enviarEmailBrevo(destinatario, asunto, htmlBody) {
-  if (!BREVO_API_KEY || BREVO_API_KEY === 'TU_API_KEY_BREVO') return;
+  if (!BREVO_API_KEY) return;
   UrlFetchApp.fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'post',
     headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' },
