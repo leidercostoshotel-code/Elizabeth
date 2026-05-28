@@ -85,9 +85,9 @@ function doPost(e) {
   try {
     const p = JSON.parse(e.postData.contents);
 
-    // Acción: registrar usuario (nombre + sección + PIN para recuperación multi-dispositivo)
+    // Acción: registrar usuario (nombre + email + sección + PIN para recuperación multi-dispositivo)
     if (p.action === 'registrarUsuario') {
-      return buildResponse(registrarUsuarioEnSheets(p.nombre || '', p.seccion || '', p.pin || ''));
+      return buildResponse(registrarUsuarioEnSheets(p.nombre || '', p.seccion || '', p.pin || '', p.email || ''));
     }
 
     // Acción: recuperar perfil desde otro dispositivo (verifica nombre + PIN)
@@ -574,18 +574,17 @@ function levantarObservacion(codigo, comentario, fotoBase64, estado) {
 // =============================================
 // REGISTRO DE USUARIOS
 // =============================================
-function registrarUsuarioEnSheets(nombre, seccion, pin) {
+function registrarUsuarioEnSheets(nombre, seccion, pin, email) {
   if (!nombre || !seccion) return { resultado: 'error', error: 'Nombre y sección requeridos' };
 
   const ss    = SpreadsheetApp.openById(SPREADSHEET_ID);
   let hoja    = ss.getSheetByName('Usuarios');
 
-  // Crear hoja si no existe
   if (!hoja) {
     hoja = ss.insertSheet('Usuarios');
     hoja.setTabColor('#1A7F54');
 
-    hoja.getRange(1, 1, 1, 5).merge()
+    hoja.getRange(1, 1, 1, 6).merge()
         .setValue('USUARIOS REGISTRADOS — Walk Through · Swissotel Lima Peru')
         .setBackground('#1A7F54')
         .setFontColor('#FFFFFF')
@@ -596,8 +595,8 @@ function registrarUsuarioEnSheets(nombre, seccion, pin) {
         .setVerticalAlignment('middle');
     hoja.setRowHeight(1, 36);
 
-    const cabs = ['NOMBRE', 'SECCIÓN', 'PIN', 'FECHA REGISTRO', 'ÚLTIMO ACCESO'];
-    hoja.getRange(2, 1, 1, 5).setValues([cabs])
+    const cabs = ['NOMBRE', 'CORREO ELECTRÓNICO', 'SECCIÓN', 'PIN', 'FECHA REGISTRO', 'ÚLTIMO ACCESO'];
+    hoja.getRange(2, 1, 1, 6).setValues([cabs])
         .setBackground('#145A32')
         .setFontColor('#FFFFFF')
         .setFontWeight('bold')
@@ -605,36 +604,36 @@ function registrarUsuarioEnSheets(nombre, seccion, pin) {
         .setHorizontalAlignment('center');
     hoja.setRowHeight(2, 30);
 
-    hoja.setColumnWidth(1, 220);
-    hoja.setColumnWidth(2, 140);
-    hoja.setColumnWidth(3, 80);
-    hoja.setColumnWidth(4, 180);
-    hoja.setColumnWidth(5, 180);
+    hoja.setColumnWidth(1, 200);
+    hoja.setColumnWidth(2, 220);
+    hoja.setColumnWidth(3, 130);
+    hoja.setColumnWidth(4, 70);
+    hoja.setColumnWidth(5, 170);
+    hoja.setColumnWidth(6, 170);
     hoja.setFrozenRows(2);
   }
 
   const ahora  = new Date().toLocaleString('es-PE');
   const ultimo = hoja.getLastRow();
 
-  // Buscar si ya existe el usuario (desde fila 3)
   if (ultimo >= 3) {
-    const datos = hoja.getRange(3, 1, ultimo - 2, 5).getValues();
+    const datos = hoja.getRange(3, 1, ultimo - 2, 6).getValues();
     for (let i = 0; i < datos.length; i++) {
       if (String(datos[i][0]).trim().toLowerCase() === nombre.trim().toLowerCase()) {
         const fila = i + 3;
-        hoja.getRange(fila, 2).setValue(seccion);
-        if (pin) hoja.getRange(fila, 3).setValue(pin);
-        hoja.getRange(fila, 5).setValue(ahora);
+        if (email)  hoja.getRange(fila, 2).setValue(email);
+        hoja.getRange(fila, 3).setValue(seccion);
+        if (pin)    hoja.getRange(fila, 4).setValue(pin);
+        hoja.getRange(fila, 6).setValue(ahora);
         return { resultado: 'ok', accion: 'actualizado' };
       }
     }
   }
 
-  // Usuario nuevo
   const nuevaFila = hoja.getLastRow() + 1;
-  hoja.appendRow([nombre, seccion, pin || '', ahora, ahora]);
+  hoja.appendRow([nombre, email || '', seccion, pin || '', ahora, ahora]);
   const color = (nuevaFila % 2 === 0) ? '#EAF7EF' : '#FFFFFF';
-  hoja.getRange(nuevaFila, 1, 1, 5).setBackground(color).setFontSize(11);
+  hoja.getRange(nuevaFila, 1, 1, 6).setBackground(color).setFontSize(11);
 
   return { resultado: 'ok', accion: 'registrado' };
 }
@@ -647,15 +646,15 @@ function recuperarPerfilDesdeSheets(nombre, pin) {
   if (!hoja || hoja.getLastRow() < 3)
     return { resultado: 'error', error: 'No se encontró el perfil. Crea uno nuevo.' };
 
-  const datos = hoja.getRange(3, 1, hoja.getLastRow() - 2, 5).getValues();
+  const datos = hoja.getRange(3, 1, hoja.getLastRow() - 2, 6).getValues();
   for (const fila of datos) {
     if (String(fila[0]).trim().toLowerCase() === nombre.trim().toLowerCase()) {
-      if (String(fila[2]).trim() !== String(pin).trim())
+      // cols: 0=nombre, 1=email, 2=seccion, 3=pin, 4=fecha reg, 5=último acceso
+      if (String(fila[3]).trim() !== String(pin).trim())
         return { resultado: 'error', error: 'PIN incorrecto' };
-      // Actualizar último acceso
       const idx = datos.indexOf(fila) + 3;
-      hoja.getRange(idx, 5).setValue(new Date().toLocaleString('es-PE'));
-      return { resultado: 'ok', nombre: fila[0], seccion: fila[1], pin: fila[2] };
+      hoja.getRange(idx, 6).setValue(new Date().toLocaleString('es-PE'));
+      return { resultado: 'ok', nombre: fila[0], email: fila[1], seccion: fila[2], pin: fila[3] };
     }
   }
   return { resultado: 'error', error: 'Nombre no encontrado. Verifica o crea un perfil nuevo.' };

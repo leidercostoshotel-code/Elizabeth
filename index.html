@@ -895,6 +895,11 @@
               class="auth-input" autocomplete="off">
           </div>
           <div style="margin-bottom:11px">
+            <label class="auth-label">Correo electrónico</label>
+            <input id="regEmail" type="email" inputmode="email" placeholder="tucorreo@hotel.com"
+              class="auth-input" autocomplete="email">
+          </div>
+          <div style="margin-bottom:11px">
             <label class="auth-label">Tu sección</label>
             <div style="position:relative">
               <select id="regSeccion" class="auth-input" style="padding-right:36px;cursor:pointer;-webkit-appearance:none;appearance:none">
@@ -2365,25 +2370,27 @@
 
   function registrarse() {
     const nombre  = document.getElementById('regNombre').value.trim();
+    const email   = document.getElementById('regEmail').value.trim().toLowerCase();
     const seccion = document.getElementById('regSeccion').value;
     const pin     = document.getElementById('regPin').value;
     const pinConf = document.getElementById('regPinConf').value;
     const errEl   = document.getElementById('regError');
     errEl.style.display = 'none';
     if (!nombre)          { errEl.textContent = 'Ingresa tu nombre completo'; errEl.style.display = 'block'; return; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+                          { errEl.textContent = 'Ingresa un correo electrónico válido'; errEl.style.display = 'block'; return; }
     if (!seccion)         { errEl.textContent = 'Selecciona tu sección'; errEl.style.display = 'block'; return; }
     if (pin.length !== 4) { errEl.textContent = 'El PIN debe tener exactamente 4 dígitos'; errEl.style.display = 'block'; return; }
     if (pin !== pinConf)  { errEl.textContent = 'Los PINs no coinciden'; errEl.style.display = 'block'; return; }
     if (!/^\d{4}$/.test(pin)) { errEl.textContent = 'El PIN debe contener solo números'; errEl.style.display = 'block'; return; }
-    localStorage.setItem(PERFIL_KEY, JSON.stringify({ nombre, seccion, pin }));
+    localStorage.setItem(PERFIL_KEY, JSON.stringify({ nombre, email, seccion, pin }));
     sessionStorage.setItem(SESION_APP_KEY, '1');
-    // Guardar también en Sheets para recuperación desde otros dispositivos
     fetch(SCRIPT_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'registrarUsuario', nombre, seccion, pin })
+      body: JSON.stringify({ action: 'registrarUsuario', nombre, email, seccion, pin })
     }).catch(() => {});
-    entrarApp({ nombre, seccion });
+    entrarApp({ nombre, email, seccion });
   }
 
   async function recuperarPerfil() {
@@ -2403,10 +2410,10 @@
       });
       const d = await r.json();
       if (d.resultado === 'ok') {
-        localStorage.setItem(PERFIL_KEY, JSON.stringify({ nombre: d.nombre, seccion: d.seccion, pin: d.pin }));
+        localStorage.setItem(PERFIL_KEY, JSON.stringify({ nombre: d.nombre, email: d.email, seccion: d.seccion, pin: d.pin }));
         sessionStorage.setItem(SESION_APP_KEY, '1');
         mostrarToast('¡Perfil recuperado! Bienvenido, ' + d.nombre, 'success');
-        entrarApp({ nombre: d.nombre, seccion: d.seccion });
+        entrarApp({ nombre: d.nombre, email: d.email, seccion: d.seccion });
       } else {
         errEl.textContent = d.error || 'No se pudo recuperar el perfil';
         errEl.style.display = 'block';
@@ -2472,6 +2479,7 @@
 
   function irARegistro() {
     document.getElementById('regNombre').value   = '';
+    document.getElementById('regEmail').value    = '';
     document.getElementById('regSeccion').value  = '';
     document.getElementById('regPin').value      = '';
     document.getElementById('regPinConf').value  = '';
