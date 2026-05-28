@@ -2470,34 +2470,48 @@
     document.getElementById('perfilBadge').style.display = 'flex';
   }
 
+  function limpiarFormularioRegistro() {
+    ['regNombre','regEmail','regSeccion','regPin','regPinConf'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    document.getElementById('regError').style.display = 'none';
+    // Cerrar panel de recuperación si estaba abierto
+    const recPanel = document.getElementById('recPanel');
+    const recBtn   = document.getElementById('recToggleBtn');
+    if (recPanel) recPanel.style.display = 'none';
+    if (recBtn)   recBtn.textContent = '¿Ya te registraste en otro dispositivo?';
+    ['recNombre','recPin'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    const recErr = document.getElementById('recError');
+    if (recErr) recErr.style.display = 'none';
+  }
+
   function cerrarSesion() {
     sessionStorage.removeItem(SESION_APP_KEY);
+    limpiarFormularioRegistro();
     const perfil = obtenerPerfil();
     if (perfil) mostrarLoginVista(perfil);
     document.getElementById('appStartOverlay').style.display = 'flex';
   }
 
   function irARegistro() {
-    document.getElementById('regNombre').value   = '';
-    document.getElementById('regEmail').value    = '';
-    document.getElementById('regSeccion').value  = '';
-    document.getElementById('regPin').value      = '';
-    document.getElementById('regPinConf').value  = '';
-    document.getElementById('regError').style.display = 'none';
-    // Both panels are always visible; on mobile scroll to top so reg panel is visible
+    limpiarFormularioRegistro();
     const ov = document.getElementById('appStartOverlay');
-    ov.scrollTop = 0;
-    setTimeout(() => document.getElementById('regNombre').focus(), 200);
+    if (ov) ov.scrollTop = 0;
+    setTimeout(() => { const el = document.getElementById('regNombre'); if (el) el.focus(); }, 200);
   }
 
   function cambiarPerfil() {
     if (!confirm('¿Deseas cambiar de perfil? Tendrás que volver a registrarte.')) return;
     localStorage.removeItem(PERFIL_KEY);
     sessionStorage.removeItem(SESION_APP_KEY);
-    document.getElementById('loginVista').style.display     = 'none';
+    limpiarFormularioRegistro();
+    document.getElementById('loginVista').style.display       = 'none';
     document.getElementById('loginNoPerfilMsg').style.display = 'block';
-    irARegistro();
-    document.getElementById('appStartOverlay').style.display = 'flex';
+    document.getElementById('appStartOverlay').style.display  = 'flex';
   }
 
   // Iniciar al cargar la página
