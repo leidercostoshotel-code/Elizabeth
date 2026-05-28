@@ -814,30 +814,42 @@
     <!-- ── PANEL LOGIN ── -->
     <div id="loginVista">
       <h2 class="fl-panel-title">Inicia sesión</h2>
-      <p class="fl-panel-sub">Usa tu perfil registrado para ingresar al sistema</p>
+      <p class="fl-panel-sub">Ingresa con tu perfil para acceder al sistema</p>
 
-      <!-- Tarjeta de identidad -->
-      <div class="fl-identity">
-        <div id="loginAvatar" class="fl-avatar"></div>
-        <div style="min-width:0">
-          <div id="loginNombreText" class="fl-identity-name"></div>
-          <div id="loginSeccionText" class="fl-identity-sec"></div>
+      <!-- Tarjeta de identidad: visible solo cuando hay perfil en este dispositivo -->
+      <div id="loginConPerfilWrap">
+        <div class="fl-identity">
+          <div id="loginAvatar" class="fl-avatar"></div>
+          <div style="min-width:0">
+            <div id="loginNombreText" class="fl-identity-name"></div>
+            <div id="loginSeccionText" class="fl-identity-sec"></div>
+          </div>
         </div>
       </div>
 
-      <!-- PIN -->
+      <!-- Campo nombre: visible solo en dispositivo nuevo (sin perfil local) -->
+      <div id="loginSinPerfilWrap" style="display:none">
+        <div class="fl-field">
+          <label class="fl-field-label">Tu nombre (como te registraste)</label>
+          <input id="loginNombreRec" type="text" placeholder="Nombre completo"
+            class="fl-input" autocomplete="off">
+        </div>
+      </div>
+
+      <!-- PIN (siempre visible) -->
       <div class="fl-field">
         <label class="fl-field-label">PIN de acceso</label>
         <input id="loginPin" type="password" inputmode="numeric" maxlength="4"
           placeholder="• • • •" autocomplete="off" class="fl-input fl-pin-input"
           onkeydown="if(event.key==='Enter')iniciarSesion()"
-          oninput="if(this.value.length===4)iniciarSesion()">
+          oninput="if(this.value.length===4 && obtenerPerfil())iniciarSesion()">
       </div>
 
       <div id="loginError" class="fl-error"></div>
       <button onclick="iniciarSesion()" class="fl-btn">Ingresar</button>
 
-      <div style="margin-top:14px;text-align:center">
+      <!-- Enlace cambiar perfil: solo cuando hay perfil local -->
+      <div id="loginCambiarWrap" style="margin-top:14px;text-align:center">
         <button onclick="cambiarPerfil()" class="fl-link-plain">¿No eres tú? Cambiar perfil</button>
       </div>
 
@@ -2299,7 +2311,7 @@
   function initApp() {
     const perfil = obtenerPerfil();
     if (!perfil) {
-      mostrarRegistro();
+      mostrarLoginSinPerfil();
       document.getElementById('appStartOverlay').style.display = 'flex';
     } else if (!sessionStorage.getItem(SESION_APP_KEY)) {
       mostrarLoginVista(perfil);
@@ -2314,7 +2326,7 @@
     if (perfil) {
       mostrarLoginVista(perfil);
     } else {
-      mostrarRegistro();
+      mostrarLoginSinPerfil();
     }
   }
 
@@ -2323,9 +2335,23 @@
     document.getElementById('regVista').style.display   = 'block';
   }
 
+  function mostrarLoginSinPerfil() {
+    document.getElementById('regVista').style.display            = 'none';
+    document.getElementById('loginVista').style.display          = 'block';
+    document.getElementById('loginConPerfilWrap').style.display  = 'none';
+    document.getElementById('loginSinPerfilWrap').style.display  = 'block';
+    document.getElementById('loginCambiarWrap').style.display    = 'none';
+    document.getElementById('loginPin').value = '';
+    document.getElementById('loginError').style.display = 'none';
+    setTimeout(() => document.getElementById('loginNombreRec').focus(), 300);
+  }
+
   function mostrarLoginVista(perfil) {
-    document.getElementById('regVista').style.display   = 'none';
-    document.getElementById('loginVista').style.display = 'block';
+    document.getElementById('regVista').style.display            = 'none';
+    document.getElementById('loginVista').style.display          = 'block';
+    document.getElementById('loginConPerfilWrap').style.display  = 'block';
+    document.getElementById('loginSinPerfilWrap').style.display  = 'none';
+    document.getElementById('loginCambiarWrap').style.display    = 'block';
     const col = avatarColor(perfil.nombre);
     document.getElementById('loginAvatar').style.background = col;
     document.getElementById('loginAvatar').textContent = iniciales(perfil.nombre);
@@ -2403,19 +2429,69 @@
       : 'Cancelar recuperación';
   }
 
-  function iniciarSesion() {
+  async function iniciarSesion() {
     const perfil = obtenerPerfil();
     const pin    = document.getElementById('loginPin').value;
     const errEl  = document.getElementById('loginError');
-    if (pin !== perfil.pin) {
-      errEl.textContent = 'PIN incorrecto. Inténtalo de nuevo.';
-      errEl.style.display = 'block';
-      document.getElementById('loginPin').value = '';
-      document.getElementById('loginPin').focus();
-      return;
+    errEl.style.display = 'none';
+
+    if (perfil) {
+      // Dispositivo conocido: verificar PIN localmente
+      if (pin.length !== 4) {
+        errEl.textContent = 'Ingresa tu PIN de 4 dígitos';
+        errEl.style.display = 'block';
+        return;
+      }
+      if (pin !== perfil.pin) {
+        errEl.textContent = 'PIN incorrecto. Inténtalo de nuevo.';
+        errEl.style.display = 'block';
+        document.getElementById('loginPin').value = '';
+        document.getElementById('loginPin').focus();
+        return;
+      }
+      sessionStorage.setItem(SESION_APP_KEY, '1');
+      entrarApp(perfil);
+    } else {
+      // Dispositivo nuevo: recuperar perfil desde Sheets con nombre + PIN
+      const nombre = document.getElementById('loginNombreRec').value.trim();
+      if (!nombre) {
+        errEl.textContent = 'Ingresa tu nombre como te registraste';
+        errEl.style.display = 'block';
+        document.getElementById('loginNombreRec').focus();
+        return;
+      }
+      if (pin.length !== 4) {
+        errEl.textContent = 'Ingresa tu PIN de 4 dígitos';
+        errEl.style.display = 'block';
+        document.getElementById('loginPin').focus();
+        return;
+      }
+      const btn = document.querySelector('#loginVista .fl-btn');
+      const textoOriginal = btn.textContent;
+      btn.disabled = true; btn.textContent = 'Verificando...';
+      try {
+        const r = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'recuperarPerfil', nombre, pin })
+        });
+        const d = await r.json();
+        if (d.resultado === 'ok') {
+          localStorage.setItem(PERFIL_KEY, JSON.stringify({ nombre: d.nombre, email: d.email, seccion: d.seccion, pin: d.pin }));
+          sessionStorage.setItem(SESION_APP_KEY, '1');
+          mostrarToast('¡Bienvenido de nuevo, ' + d.nombre + '!', 'success');
+          entrarApp({ nombre: d.nombre, email: d.email, seccion: d.seccion });
+        } else {
+          errEl.textContent = d.error || 'No se encontró el perfil. Verifica tu nombre y PIN.';
+          errEl.style.display = 'block';
+        }
+      } catch {
+        errEl.textContent = 'Error de conexión. Verifica tu internet e inténtalo de nuevo.';
+        errEl.style.display = 'block';
+      } finally {
+        btn.disabled = false; btn.textContent = textoOriginal;
+      }
     }
-    sessionStorage.setItem(SESION_APP_KEY, '1');
-    entrarApp(perfil);
   }
 
   function entrarApp(perfil) {
@@ -2473,11 +2549,11 @@
   }
 
   function cambiarPerfil() {
-    if (!confirm('¿Deseas cambiar de perfil? Tendrás que volver a registrarte.')) return;
+    if (!confirm('¿Deseas cambiar de perfil? Podrás ingresar con tu nombre y PIN o crear uno nuevo.')) return;
     localStorage.removeItem(PERFIL_KEY);
     sessionStorage.removeItem(SESION_APP_KEY);
     limpiarFormularioRegistro();
-    mostrarRegistro();
+    mostrarLoginSinPerfil();
     document.getElementById('appStartOverlay').style.display = 'flex';
   }
 
