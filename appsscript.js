@@ -7,10 +7,10 @@ const SPREADSHEET_ID = '1QtJ6JWHAW29eNOVBsnszKj5c2teiFk4KoRXT91-z6DY';
 const CARPETA_NOMBRE = 'Evidencias Fotograficas';
 const HOTEL_NOMBRE   = 'Swissotel Lima Peru';
 
-// ── Email (Brevo) ──────────────────────────────────────────────────────────
-// Claves guardadas en Script Properties (Configuración del proyecto):
-//   BREVO_API_KEY  y  BREVO_SENDER_EMAIL
-const BREVO_SENDER_NAME = 'Walk Through · Swissotel Lima';
+// ── Email (Brevo) — reemplaza los valores en el editor de Apps Script ───────
+const BREVO_API_KEY      = 'TU_API_KEY_BREVO';
+const BREVO_SENDER_EMAIL = 'TU_CORREO_REMITENTE';
+const BREVO_SENDER_NAME  = 'Walk Through · Swissotel Lima';
 
 const MESES = [
   'Enero','Febrero','Marzo','Abril','Mayo','Junio',
@@ -678,14 +678,12 @@ function recuperarPerfilDesdeSheets(email, pin) {
 // EMAILS DE NOTIFICACIÓN  (via Brevo)
 // =============================================
 function enviarEmailBrevo(destinatario, asunto, htmlBody) {
-  const apiKey      = PropertiesService.getScriptProperties().getProperty('BREVO_API_KEY')      || '';
-  const senderEmail = PropertiesService.getScriptProperties().getProperty('BREVO_SENDER_EMAIL') || '';
-  if (!apiKey || !senderEmail) return;
+  if (!BREVO_API_KEY || BREVO_API_KEY === 'TU_API_KEY_BREVO') return;
   UrlFetchApp.fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'post',
-    headers: { 'api-key': apiKey, 'Content-Type': 'application/json' },
+    headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' },
     payload: JSON.stringify({
-      sender: { name: BREVO_SENDER_NAME, email: senderEmail },
+      sender: { name: BREVO_SENDER_NAME, email: BREVO_SENDER_EMAIL },
       to: [{ email: destinatario }],
       subject: asunto,
       htmlContent: htmlBody
