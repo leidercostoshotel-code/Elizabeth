@@ -1844,6 +1844,9 @@
       estado: estadoSeleccionado,
       foto: photoBase64
     };
+    const _p = obtenerPerfil();
+    if (_p && _p.email) payload.emailUsuario = _p.email;
+    if (_p && _p.nombre) payload.nombreUsuario = _p.nombre;
 
     try {
       setProgreso(60);
@@ -2734,6 +2737,9 @@
     try {
       const payload = { action: 'levantar', codigo, comentario, estado };
       if (levFotoBase64) payload.foto = levFotoBase64;
+      const _p2 = obtenerPerfil();
+      if (_p2 && _p2.email) payload.emailUsuario = _p2.email;
+      if (_p2 && _p2.nombre) payload.nombreUsuario = _p2.nombre;
 
       const res  = await fetch(SCRIPT_URL, { method:'POST', body: JSON.stringify(payload) });
       const data = await res.json();

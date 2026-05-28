@@ -7,6 +7,20 @@ const SPREADSHEET_ID = '1QtJ6JWHAW29eNOVBsnszKj5c2teiFk4KoRXT91-z6DY';
 const CARPETA_NOMBRE = 'Evidencias Fotograficas';
 const HOTEL_NOMBRE   = 'Swissotel Lima Peru';
 
+// ── Email (Brevo) ──────────────────────────────────────────────────────────
+// Guarda las claves en Script Properties (no en el código):
+//   Apps Script Editor → Configuración del proyecto → Propiedades del script
+//   Agrega: BREVO_API_KEY  y  BREVO_SENDER_EMAIL
+const BREVO_SENDER_NAME  = 'Walk Through · Swissotel Lima';
+
+function _brevoCfg() {
+  const props = PropertiesService.getScriptProperties();
+  return {
+    apiKey:      props.getProperty('BREVO_API_KEY')      || '',
+    senderEmail: props.getProperty('BREVO_SENDER_EMAIL') || ''
+  };
+}
+
 const MESES = [
   'Enero','Febrero','Marzo','Abril','Mayo','Junio',
   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
@@ -103,11 +117,16 @@ function doPost(e) {
         p.foto || '',
         p.estado || 'Corregido'
       );
+      if (out.resultado === 'ok' && p.emailUsuario) {
+        try { enviarEmailLevantamiento(out.codigo, p.comentario || '', p.estado || 'Corregido', p.emailUsuario, p.nombreUsuario || ''); } catch(e) {}
+      }
       return buildResponse(out);
     }
 
+    const emailUsuario  = p.emailUsuario  || '';
+    const nombreUsuario = p.nombreUsuario || '';
     const fotoInfo = guardarFotoEnDrive(p.foto);
-    const id = guardarEnSheets({
+    const datosGuardar = {
       fecha:        p.fecha || new Date().toLocaleString('es-PE'),
       area:         p.area || 'General',
       subarea:      p.subarea || '',
@@ -118,7 +137,11 @@ function doPost(e) {
       estado:        p.estado || '',
       urlFoto:      fotoInfo.url,
       idFoto:       fotoInfo.id
-    });
+    };
+    const id = guardarEnSheets(datosGuardar);
+    if (emailUsuario) {
+      try { enviarEmailNuevoRegistro(datosGuardar, id, fotoInfo.url, emailUsuario, nombreUsuario); } catch(e) {}
+    }
     return buildResponse({ resultado: 'ok', id: id, urlFoto: fotoInfo.url });
   } catch (err) {
     return buildResponse({ resultado: 'error', error: err.message });
@@ -658,6 +681,195 @@ function recuperarPerfilDesdeSheets(email, pin) {
     }
   }
   return { resultado: 'error', error: 'Correo no encontrado. Verifica o crea un perfil nuevo.' };
+}
+
+// =============================================
+// EMAILS DE NOTIFICACIÓN  (via Brevo)
+// =============================================
+function enviarEmailBrevo(destinatario, asunto, htmlBody) {
+  const cfg = _brevoCfg();
+  if (!cfg.apiKey || !cfg.senderEmail) return;
+  UrlFetchApp.fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'post',
+    headers: { 'api-key': cfg.apiKey, 'Content-Type': 'application/json' },
+    payload: JSON.stringify({
+      sender: { name: BREVO_SENDER_NAME, email: cfg.senderEmail },
+      to: [{ email: destinatario }],
+      subject: asunto,
+      htmlContent: htmlBody
+    }),
+    muteHttpExceptions: true
+  });
+}
+
+function enviarEmailNuevoRegistro(datos, codigo, urlFoto, emailUsuario, nombreUsuario) {
+  const qrUrl  = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(codigo);
+  const estado = datos.estado || '';
+  const estadoColor = estado === 'Pendiente' ? '#C0392B' : estado === 'En proceso' ? '#E67E22' : '#1A7F54';
+  const area   = datos.subarea || datos.area || '';
+
+  const html = `
+<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#F0EBEC;font-family:Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F0EBEC;padding:32px 0">
+<tr><td align="center">
+<table width="580" cellpadding="0" cellspacing="0" style="max-width:580px">
+
+  <!-- HEADER -->
+  <tr><td style="background:#7B1827;border-radius:14px 14px 0 0;padding:32px 36px;text-align:center">
+    <div style="color:#C9A84C;font-size:11px;font-weight:bold;letter-spacing:4px;text-transform:uppercase">Swissotel Lima Peru</div>
+    <div style="color:#ffffff;font-size:26px;font-weight:900;margin-top:6px;letter-spacing:2px">WALK THROUGH</div>
+    <div style="color:rgba(255,255,255,0.65);font-size:12px;margin-top:4px">Control de calidad operativo</div>
+  </td></tr>
+
+  <!-- BADGE OK -->
+  <tr><td style="background:#1A7F54;padding:14px 36px;text-align:center">
+    <span style="color:#ffffff;font-size:14px;font-weight:bold">✓ &nbsp;Nuevo registro creado exitosamente</span>
+  </td></tr>
+
+  <!-- BODY -->
+  <tr><td style="background:#ffffff;padding:32px 36px;border-radius:0 0 14px 14px">
+
+    ${nombreUsuario ? `<p style="margin:0 0 22px;color:#7A5C62;font-size:13px">Hola <strong>${nombreUsuario}</strong>, tu observación fue registrada correctamente.</p>` : ''}
+
+    <!-- CODIGO -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px">
+    <tr><td align="center">
+      <div style="font-size:11px;color:#aaa;letter-spacing:2px;margin-bottom:10px">CÓDIGO DE REGISTRO</div>
+      <div style="display:inline-block;background:#1C1214;color:#ffffff;font-size:20px;font-weight:900;
+                  padding:12px 32px;border-radius:50px;letter-spacing:3px">${codigo}</div>
+    </td></tr></table>
+
+    <!-- DETALLES -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:28px">
+      <tr style="background:#F8F4F5">
+        <td style="padding:11px 14px;color:#9B7B82;font-size:11px;font-weight:bold;letter-spacing:1px;width:120px">ÁREA</td>
+        <td style="padding:11px 14px;color:#1C1214;font-size:13px;font-weight:600">${area}</td>
+      </tr>
+      <tr>
+        <td style="padding:11px 14px;color:#9B7B82;font-size:11px;font-weight:bold;letter-spacing:1px">DESCRIPCIÓN</td>
+        <td style="padding:11px 14px;color:#1C1214;font-size:13px">${datos.descripcion || ''}</td>
+      </tr>
+      <tr style="background:#F8F4F5">
+        <td style="padding:11px 14px;color:#9B7B82;font-size:11px;font-weight:bold;letter-spacing:1px">RESPONSABLE</td>
+        <td style="padding:11px 14px;color:#1C1214;font-size:13px">${datos.responsable || ''}</td>
+      </tr>
+      <tr>
+        <td style="padding:11px 14px;color:#9B7B82;font-size:11px;font-weight:bold;letter-spacing:1px">DEPARTAMENTO</td>
+        <td style="padding:11px 14px;color:#1C1214;font-size:13px">${datos.departamento || ''}</td>
+      </tr>
+      <tr style="background:#F8F4F5">
+        <td style="padding:11px 14px;color:#9B7B82;font-size:11px;font-weight:bold;letter-spacing:1px">ESTADO</td>
+        <td style="padding:11px 14px">
+          <span style="background:${estadoColor};color:#fff;font-size:11px;font-weight:bold;
+                       padding:4px 12px;border-radius:50px">${estado}</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:11px 14px;color:#9B7B82;font-size:11px;font-weight:bold;letter-spacing:1px">FECHA</td>
+        <td style="padding:11px 14px;color:#1C1214;font-size:13px">${datos.fecha || ''}</td>
+      </tr>
+    </table>
+
+    <!-- QR -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #F0E8EA;padding-top:28px">
+    <tr><td align="center">
+      <div style="font-size:11px;color:#aaa;letter-spacing:2px;margin-bottom:14px">CÓDIGO QR</div>
+      <img src="${qrUrl}" width="160" height="160" alt="${codigo}" style="border-radius:10px;display:block;margin:0 auto">
+      <div style="font-size:11px;color:#bbb;margin-top:10px">Escanea para buscar y levantar esta observación</div>
+    </td></tr></table>
+
+  </td></tr>
+
+  <!-- FOOTER -->
+  <tr><td style="padding:20px 36px;text-align:center">
+    <div style="font-size:11px;color:#B0A0A2">Walk Through &nbsp;·&nbsp; Swissotel Lima Peru</div>
+    <div style="font-size:10px;color:#CCC;margin-top:4px">Este correo fue generado automáticamente</div>
+  </td></tr>
+
+</table>
+</td></tr></table>
+</body></html>`;
+
+  enviarEmailBrevo(emailUsuario, '📋 Nuevo registro Walk Through · ' + codigo, html);
+}
+
+function enviarEmailLevantamiento(codigo, comentario, estado, emailUsuario, nombreUsuario) {
+  const qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(codigo);
+  const estadoColor = estado === 'Corregido' ? '#1A7F54' : estado === 'En proceso' ? '#E67E22' : '#C0392B';
+  const fecha = new Date().toLocaleString('es-PE');
+
+  const html = `
+<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#F0EBEC;font-family:Arial,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F0EBEC;padding:32px 0">
+<tr><td align="center">
+<table width="580" cellpadding="0" cellspacing="0" style="max-width:580px">
+
+  <!-- HEADER -->
+  <tr><td style="background:#7B1827;border-radius:14px 14px 0 0;padding:32px 36px;text-align:center">
+    <div style="color:#C9A84C;font-size:11px;font-weight:bold;letter-spacing:4px;text-transform:uppercase">Swissotel Lima Peru</div>
+    <div style="color:#ffffff;font-size:26px;font-weight:900;margin-top:6px;letter-spacing:2px">WALK THROUGH</div>
+    <div style="color:rgba(255,255,255,0.65);font-size:12px;margin-top:4px">Control de calidad operativo</div>
+  </td></tr>
+
+  <!-- BADGE LEVANTAMIENTO -->
+  <tr><td style="background:${estadoColor};padding:14px 36px;text-align:center">
+    <span style="color:#ffffff;font-size:14px;font-weight:bold">✓ &nbsp;Observación levantada · ${estado}</span>
+  </td></tr>
+
+  <!-- BODY -->
+  <tr><td style="background:#ffffff;padding:32px 36px;border-radius:0 0 14px 14px">
+
+    ${nombreUsuario ? `<p style="margin:0 0 22px;color:#7A5C62;font-size:13px">Hola <strong>${nombreUsuario}</strong>, la observación fue actualizada.</p>` : ''}
+
+    <!-- CODIGO -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px">
+    <tr><td align="center">
+      <div style="font-size:11px;color:#aaa;letter-spacing:2px;margin-bottom:10px">CÓDIGO DE REGISTRO</div>
+      <div style="display:inline-block;background:#1C1214;color:#ffffff;font-size:20px;font-weight:900;
+                  padding:12px 32px;border-radius:50px;letter-spacing:3px">${codigo}</div>
+    </td></tr></table>
+
+    <!-- DETALLES LEVANTAMIENTO -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:28px">
+      <tr style="background:#F8F4F5">
+        <td style="padding:11px 14px;color:#9B7B82;font-size:11px;font-weight:bold;letter-spacing:1px;width:120px">NUEVO ESTADO</td>
+        <td style="padding:11px 14px">
+          <span style="background:${estadoColor};color:#fff;font-size:11px;font-weight:bold;
+                       padding:4px 12px;border-radius:50px">${estado}</span>
+        </td>
+      </tr>
+      ${comentario ? `
+      <tr>
+        <td style="padding:11px 14px;color:#9B7B82;font-size:11px;font-weight:bold;letter-spacing:1px">COMENTARIO</td>
+        <td style="padding:11px 14px;color:#1C1214;font-size:13px">${comentario}</td>
+      </tr>` : ''}
+      <tr style="background:#F8F4F5">
+        <td style="padding:11px 14px;color:#9B7B82;font-size:11px;font-weight:bold;letter-spacing:1px">FECHA</td>
+        <td style="padding:11px 14px;color:#1C1214;font-size:13px">${fecha}</td>
+      </tr>
+    </table>
+
+    <!-- QR -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #F0E8EA;padding-top:28px">
+    <tr><td align="center">
+      <div style="font-size:11px;color:#aaa;letter-spacing:2px;margin-bottom:14px">CÓDIGO QR</div>
+      <img src="${qrUrl}" width="160" height="160" alt="${codigo}" style="border-radius:10px;display:block;margin:0 auto">
+      <div style="font-size:11px;color:#bbb;margin-top:10px">Escanea para ver el detalle completo</div>
+    </td></tr></table>
+
+  </td></tr>
+
+  <!-- FOOTER -->
+  <tr><td style="padding:20px 36px;text-align:center">
+    <div style="font-size:11px;color:#B0A0A2">Walk Through &nbsp;·&nbsp; Swissotel Lima Peru</div>
+    <div style="font-size:10px;color:#CCC;margin-top:4px">Este correo fue generado automáticamente</div>
+  </td></tr>
+
+</table>
+</td></tr></table>
+</body></html>`;
+
+  enviarEmailBrevo(emailUsuario, '✅ Levantamiento registrado · ' + codigo + ' · ' + estado, html);
 }
 
 // =============================================
