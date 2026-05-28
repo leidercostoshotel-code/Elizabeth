@@ -725,9 +725,15 @@
       <button onclick="iniciarSesion()" style="width:100%;padding:14px;background:var(--primary);color:#fff;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit;margin-bottom:10px">
         Ingresar
       </button>
-      <button onclick="cambiarPerfil()" style="width:100%;padding:10px;background:none;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit">
+      <button onclick="cambiarPerfil()" style="width:100%;padding:10px;background:none;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:8px">
         No soy yo — cambiar perfil
       </button>
+      <div style="text-align:center;padding-top:4px">
+        <span style="font-size:12px;color:var(--muted)">¿Primera vez en este dispositivo?</span>
+        <button onclick="irARegistro()" style="background:none;border:none;color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:underline;padding:0 4px">
+          Crear nuevo perfil
+        </button>
+      </div>
     </div>
 
   </div>
@@ -2200,16 +2206,21 @@
     document.getElementById('appStartOverlay').style.display = 'flex';
   }
 
+  function irARegistro() {
+    document.getElementById('regNombre').value   = '';
+    document.getElementById('regSeccion').value  = '';
+    document.getElementById('regPin').value      = '';
+    document.getElementById('regPinConf').value  = '';
+    document.getElementById('regError').style.display = 'none';
+    document.getElementById('regVista').style.display   = 'block';
+    document.getElementById('loginVista').style.display = 'none';
+  }
+
   function cambiarPerfil() {
     if (!confirm('¿Deseas cambiar de perfil? Tendrás que volver a registrarte.')) return;
     localStorage.removeItem(PERFIL_KEY);
     sessionStorage.removeItem(SESION_APP_KEY);
-    document.getElementById('regNombre').value = '';
-    document.getElementById('regSeccion').value = '';
-    document.getElementById('regPin').value = '';
-    document.getElementById('regPinConf').value = '';
-    document.getElementById('regVista').style.display = 'block';
-    document.getElementById('loginVista').style.display = 'none';
+    irARegistro();
     document.getElementById('appStartOverlay').style.display = 'flex';
   }
 
