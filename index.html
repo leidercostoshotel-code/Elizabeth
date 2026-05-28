@@ -827,12 +827,12 @@
         </div>
       </div>
 
-      <!-- Campo nombre: visible solo en dispositivo nuevo (sin perfil local) -->
+      <!-- Campo email: visible solo en dispositivo nuevo (sin perfil local) -->
       <div id="loginSinPerfilWrap" style="display:none">
         <div class="fl-field">
-          <label class="fl-field-label">Tu nombre (como te registraste)</label>
-          <input id="loginNombreRec" type="text" placeholder="Nombre completo"
-            class="fl-input" autocomplete="off">
+          <label class="fl-field-label">Correo electrónico</label>
+          <input id="loginEmailRec" type="email" inputmode="email" placeholder="tucorreo@hotel.com"
+            class="fl-input" autocomplete="email">
         </div>
       </div>
 
@@ -908,8 +908,8 @@
       <div id="recPanel" style="display:none" class="fl-rec-panel">
         <div class="fl-rec-title">Recuperar perfil existente</div>
         <div class="fl-field" style="margin-bottom:14px">
-          <label class="fl-field-label">Tu nombre (como te registraste)</label>
-          <input id="recNombre" type="text" placeholder="Nombre completo" class="fl-input" autocomplete="off">
+          <label class="fl-field-label">Correo electrónico</label>
+          <input id="recNombre" type="email" inputmode="email" placeholder="tucorreo@hotel.com" class="fl-input" autocomplete="email">
         </div>
         <div class="fl-field" style="margin-bottom:14px">
           <label class="fl-field-label">Tu PIN</label>
@@ -2341,9 +2341,10 @@
     document.getElementById('loginConPerfilWrap').style.display  = 'none';
     document.getElementById('loginSinPerfilWrap').style.display  = 'block';
     document.getElementById('loginCambiarWrap').style.display    = 'none';
+    document.getElementById('loginEmailRec').value = '';
     document.getElementById('loginPin').value = '';
     document.getElementById('loginError').style.display = 'none';
-    setTimeout(() => document.getElementById('loginNombreRec').focus(), 300);
+    setTimeout(() => document.getElementById('loginEmailRec').focus(), 300);
   }
 
   function mostrarLoginVista(perfil) {
@@ -2388,11 +2389,11 @@
   }
 
   async function recuperarPerfil() {
-    const nombre = document.getElementById('recNombre').value.trim();
+    const email  = document.getElementById('recNombre').value.trim().toLowerCase();
     const pin    = document.getElementById('recPin').value;
     const errEl  = document.getElementById('recError');
     errEl.style.display = 'none';
-    if (!nombre) { errEl.textContent = 'Ingresa tu nombre'; errEl.style.display = 'block'; return; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent = 'Ingresa tu correo electrónico'; errEl.style.display = 'block'; return; }
     if (pin.length !== 4) { errEl.textContent = 'Ingresa tu PIN de 4 dígitos'; errEl.style.display = 'block'; return; }
     const btn = document.getElementById('btnRecuperar');
     btn.disabled = true; btn.textContent = 'Buscando...';
@@ -2400,7 +2401,7 @@
       const r = await fetch(SCRIPT_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'recuperarPerfil', nombre, pin })
+        body: JSON.stringify({ action: 'recuperarPerfil', email, pin })
       });
       const d = await r.json();
       if (d.resultado === 'ok') {
@@ -2452,12 +2453,12 @@
       sessionStorage.setItem(SESION_APP_KEY, '1');
       entrarApp(perfil);
     } else {
-      // Dispositivo nuevo: recuperar perfil desde Sheets con nombre + PIN
-      const nombre = document.getElementById('loginNombreRec').value.trim();
-      if (!nombre) {
-        errEl.textContent = 'Ingresa tu nombre como te registraste';
+      // Dispositivo nuevo: recuperar perfil desde Sheets con email + PIN
+      const email = document.getElementById('loginEmailRec').value.trim().toLowerCase();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        errEl.textContent = 'Ingresa un correo electrónico válido';
         errEl.style.display = 'block';
-        document.getElementById('loginNombreRec').focus();
+        document.getElementById('loginEmailRec').focus();
         return;
       }
       if (pin.length !== 4) {
@@ -2473,7 +2474,7 @@
         const r = await fetch(SCRIPT_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'recuperarPerfil', nombre, pin })
+          body: JSON.stringify({ action: 'recuperarPerfil', email, pin })
         });
         const d = await r.json();
         if (d.resultado === 'ok') {

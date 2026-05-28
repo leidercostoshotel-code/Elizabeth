@@ -92,7 +92,7 @@ function doPost(e) {
 
     // Acción: recuperar perfil desde otro dispositivo (verifica nombre + PIN)
     if (p.action === 'recuperarPerfil') {
-      return buildResponse(recuperarPerfilDesdeSheets(p.nombre || '', p.pin || ''));
+      return buildResponse(recuperarPerfilDesdeSheets(p.email || '', p.pin || ''));
     }
 
     // Acción: levantar observación existente
@@ -638,8 +638,8 @@ function registrarUsuarioEnSheets(nombre, seccion, pin, email) {
   return { resultado: 'ok', accion: 'registrado' };
 }
 
-function recuperarPerfilDesdeSheets(nombre, pin) {
-  if (!nombre || !pin) return { resultado: 'error', error: 'Nombre y PIN requeridos' };
+function recuperarPerfilDesdeSheets(email, pin) {
+  if (!email || !pin) return { resultado: 'error', error: 'Correo y PIN requeridos' };
 
   const ss   = SpreadsheetApp.openById(SPREADSHEET_ID);
   const hoja = ss.getSheetByName('Usuarios');
@@ -647,17 +647,17 @@ function recuperarPerfilDesdeSheets(nombre, pin) {
     return { resultado: 'error', error: 'No se encontró el perfil. Crea uno nuevo.' };
 
   const datos = hoja.getRange(3, 1, hoja.getLastRow() - 2, 6).getValues();
-  for (const fila of datos) {
-    if (String(fila[0]).trim().toLowerCase() === nombre.trim().toLowerCase()) {
-      // cols: 0=nombre, 1=email, 2=seccion, 3=pin, 4=fecha reg, 5=último acceso
+  for (let i = 0; i < datos.length; i++) {
+    const fila = datos[i];
+    // cols: 0=nombre, 1=email, 2=seccion, 3=pin, 4=fecha reg, 5=último acceso
+    if (String(fila[1]).trim().toLowerCase() === email.trim().toLowerCase()) {
       if (String(fila[3]).trim() !== String(pin).trim())
         return { resultado: 'error', error: 'PIN incorrecto' };
-      const idx = datos.indexOf(fila) + 3;
-      hoja.getRange(idx, 6).setValue(new Date().toLocaleString('es-PE'));
+      hoja.getRange(i + 3, 6).setValue(new Date().toLocaleString('es-PE'));
       return { resultado: 'ok', nombre: fila[0], email: fila[1], seccion: fila[2], pin: fila[3] };
     }
   }
-  return { resultado: 'error', error: 'Nombre no encontrado. Verifica o crea un perfil nuevo.' };
+  return { resultado: 'error', error: 'Correo no encontrado. Verifica o crea un perfil nuevo.' };
 }
 
 // =============================================
