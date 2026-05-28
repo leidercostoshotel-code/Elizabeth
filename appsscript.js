@@ -7,19 +7,10 @@ const SPREADSHEET_ID = '1QtJ6JWHAW29eNOVBsnszKj5c2teiFk4KoRXT91-z6DY';
 const CARPETA_NOMBRE = 'Evidencias Fotograficas';
 const HOTEL_NOMBRE   = 'Swissotel Lima Peru';
 
-// ── Email (Brevo) ──────────────────────────────────────────────────────────
-// Guarda las claves en Script Properties (no en el código):
-//   Apps Script Editor → Configuración del proyecto → Propiedades del script
-//   Agrega: BREVO_API_KEY  y  BREVO_SENDER_EMAIL
+// ── Email (Brevo) — reemplaza los valores en el editor de Apps Script ───────
+const BREVO_API_KEY      = 'TU_API_KEY_BREVO';
+const BREVO_SENDER_EMAIL = 'TU_CORREO_REMITENTE';
 const BREVO_SENDER_NAME  = 'Walk Through · Swissotel Lima';
-
-function _brevoCfg() {
-  const props = PropertiesService.getScriptProperties();
-  return {
-    apiKey:      props.getProperty('BREVO_API_KEY')      || '',
-    senderEmail: props.getProperty('BREVO_SENDER_EMAIL') || ''
-  };
-}
 
 const MESES = [
   'Enero','Febrero','Marzo','Abril','Mayo','Junio',
@@ -687,13 +678,12 @@ function recuperarPerfilDesdeSheets(email, pin) {
 // EMAILS DE NOTIFICACIÓN  (via Brevo)
 // =============================================
 function enviarEmailBrevo(destinatario, asunto, htmlBody) {
-  const cfg = _brevoCfg();
-  if (!cfg.apiKey || !cfg.senderEmail) return;
+  if (!BREVO_API_KEY || BREVO_API_KEY === 'TU_API_KEY_BREVO') return;
   UrlFetchApp.fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'post',
-    headers: { 'api-key': cfg.apiKey, 'Content-Type': 'application/json' },
+    headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' },
     payload: JSON.stringify({
-      sender: { name: BREVO_SENDER_NAME, email: cfg.senderEmail },
+      sender: { name: BREVO_SENDER_NAME, email: BREVO_SENDER_EMAIL },
       to: [{ email: destinatario }],
       subject: asunto,
       htmlContent: htmlBody
@@ -876,21 +866,19 @@ function enviarEmailLevantamiento(codigo, comentario, estado, emailUsuario, nomb
 // TEST
 // =============================================
 function testEmail() {
-  const cfg = _brevoCfg();
-  Logger.log('API Key: ' + (cfg.apiKey ? 'OK (' + cfg.apiKey.substring(0,10) + '...)' : 'VACÍA'));
-  Logger.log('Sender: ' + (cfg.senderEmail || 'VACÍO'));
-  if (!cfg.apiKey || !cfg.senderEmail) {
-    Logger.log('ERROR: Faltan Script Properties');
-    return;
-  }
+  const apiKey      = PropertiesService.getScriptProperties().getProperty('BREVO_API_KEY')      || '';
+  const senderEmail = PropertiesService.getScriptProperties().getProperty('BREVO_SENDER_EMAIL') || '';
+  Logger.log('API Key: ' + (apiKey ? 'OK (' + apiKey.substring(0,10) + '...)' : 'VACÍA'));
+  Logger.log('Sender: ' + (senderEmail || 'VACÍO'));
+  if (!apiKey || !senderEmail) { Logger.log('ERROR: Faltan Script Properties'); return; }
   const resp = UrlFetchApp.fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'post',
-    headers: { 'api-key': cfg.apiKey, 'Content-Type': 'application/json' },
+    headers: { 'api-key': apiKey, 'Content-Type': 'application/json' },
     payload: JSON.stringify({
-      sender: { name: BREVO_SENDER_NAME, email: cfg.senderEmail },
-      to: [{ email: cfg.senderEmail }],
+      sender: { name: BREVO_SENDER_NAME, email: senderEmail },
+      to: [{ email: senderEmail }],
       subject: '✅ Test Walk Through - Email funcionando',
-      htmlContent: '<h2 style="color:#7B1827">Walk Through · Swissotel Lima</h2><p>El sistema de emails está funcionando correctamente.</p>'
+      htmlContent: '<h2 style="color:#7B1827">Walk Through · Swissotel Lima</h2><p>Emails funcionando correctamente.</p>'
     }),
     muteHttpExceptions: true
   });
