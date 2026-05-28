@@ -651,9 +651,10 @@ function registrarUsuarioEnSheets(nombre, seccion, pin, email) {
   if (ultimo >= 3) {
     const datos = hoja.getRange(3, 1, ultimo - 2, 6).getValues();
     for (let i = 0; i < datos.length; i++) {
-      if (String(datos[i][0]).trim().toLowerCase() === nombre.trim().toLowerCase()) {
+      // Search by email (col 1) — the unique identifier
+      if (email && String(datos[i][1]).trim().toLowerCase() === email.trim().toLowerCase()) {
         const fila = i + 3;
-        if (email)  hoja.getRange(fila, 2).setValue(email);
+        if (nombre) hoja.getRange(fila, 1).setValue(nombre);
         hoja.getRange(fila, 3).setValue(seccion);
         if (pin)    hoja.getRange(fila, 4).setValue(pin);
         hoja.getRange(fila, 6).setValue(ahora);
@@ -670,8 +671,8 @@ function registrarUsuarioEnSheets(nombre, seccion, pin, email) {
   return { resultado: 'ok', accion: 'registrado' };
 }
 
-function recuperarPerfilDesdeSheets(email, pin) {
-  if (!email || !pin) return { resultado: 'error', error: 'Correo y PIN requeridos' };
+function recuperarPerfilDesdeSheets(email, pinHash) {
+  if (!email || !pinHash) return { resultado: 'error', error: 'Correo y PIN requeridos' };
 
   const ss   = SpreadsheetApp.openById(SPREADSHEET_ID);
   const hoja = ss.getSheetByName('Usuarios');
@@ -681,12 +682,29 @@ function recuperarPerfilDesdeSheets(email, pin) {
   const datos = hoja.getRange(3, 1, hoja.getLastRow() - 2, 6).getValues();
   for (let i = 0; i < datos.length; i++) {
     const fila = datos[i];
-    // cols: 0=nombre, 1=email, 2=seccion, 3=pin, 4=fecha reg, 5=último acceso
+    // cols: 0=nombre, 1=email, 2=seccion, 3=pin/pinHash, 4=fecha reg, 5=último acceso
     if (String(fila[1]).trim().toLowerCase() === email.trim().toLowerCase()) {
-      if (String(fila[3]).trim() !== String(pin).trim())
-        return { resultado: 'error', error: 'PIN incorrecto' };
+      const storedPin    = String(fila[3]).trim();
+      const storedIsHash = /^[0-9a-f]{64}$/.test(storedPin);
+      let pinValido      = false;
+
+      if (storedIsHash) {
+        pinValido = (storedPin === pinHash);
+      } else {
+        // Raw PIN stored (legacy): hash it with same salt used by the frontend
+        const salt  = 'walk-through-swissotel-2026';
+        const bytes = Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, salt + ':' + storedPin);
+        const computed = bytes.map(function(b){ return ('0' + (b & 0xFF).toString(16)).slice(-2); }).join('');
+        pinValido = (computed === pinHash);
+        if (pinValido) {
+          // Migrate: replace raw PIN in Sheets with the hash going forward
+          hoja.getRange(i + 3, 4).setValue(pinHash);
+        }
+      }
+
+      if (!pinValido) return { resultado: 'error', error: 'PIN incorrecto' };
       hoja.getRange(i + 3, 6).setValue(new Date().toLocaleString('es-PE'));
-      return { resultado: 'ok', nombre: fila[0], email: fila[1], seccion: fila[2], pin: fila[3] };
+      return { resultado: 'ok', nombre: fila[0], email: fila[1], seccion: fila[2] };
     }
   }
   return { resultado: 'error', error: 'Correo no encontrado. Verifica o crea un perfil nuevo.' };
