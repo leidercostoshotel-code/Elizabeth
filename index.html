@@ -895,6 +895,11 @@
               class="auth-input" autocomplete="off">
           </div>
           <div style="margin-bottom:11px">
+            <label class="auth-label">Correo electrónico</label>
+            <input id="regEmail" type="email" inputmode="email" placeholder="tucorreo@hotel.com"
+              class="auth-input" autocomplete="email">
+          </div>
+          <div style="margin-bottom:11px">
             <label class="auth-label">Tu sección</label>
             <div style="position:relative">
               <select id="regSeccion" class="auth-input" style="padding-right:36px;cursor:pointer;-webkit-appearance:none;appearance:none">
@@ -917,6 +922,32 @@
           </div>
           <div id="regError" style="display:none" class="auth-error-msg"></div>
           <button onclick="registrarse()" class="auth-btn auth-btn-gold">Crear perfil e ingresar →</button>
+
+          <!-- Recuperar perfil desde otro dispositivo -->
+          <div style="margin-top:14px;padding-top:12px;border-top:1px solid #E8D5D8;text-align:center">
+            <button id="recToggleBtn" onclick="toggleRecuperar()"
+              style="background:none;border:none;color:#7B1827;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;text-decoration:underline">
+              ¿Ya te registraste en otro dispositivo?
+            </button>
+          </div>
+
+          <!-- Panel recuperación (oculto por defecto) -->
+          <div id="recPanel" style="display:none;margin-top:12px;background:#F9F4F5;border-radius:12px;padding:14px;border:1.5px solid #E8D5D8">
+            <div style="font-size:11.5px;font-weight:700;color:#7B1827;margin-bottom:10px;font-family:Montserrat,sans-serif">Recuperar perfil existente</div>
+            <div style="margin-bottom:8px">
+              <label class="auth-label">Tu nombre (como te registraste)</label>
+              <input id="recNombre" type="text" placeholder="Tu nombre completo" class="auth-input" autocomplete="off">
+            </div>
+            <div style="margin-bottom:8px">
+              <label class="auth-label">Tu PIN</label>
+              <input id="recPin" type="password" inputmode="numeric" maxlength="4" placeholder="• • • •"
+                class="auth-pin-input" style="font-size:22px;padding:11px;letter-spacing:12px">
+            </div>
+            <div id="recError" style="display:none" class="auth-error-msg"></div>
+            <button id="btnRecuperar" onclick="recuperarPerfil()" class="auth-btn auth-btn-primary" style="margin-top:4px">
+              Recuperar perfil
+            </button>
+          </div>
         </div>
       </div>
 
@@ -2339,19 +2370,69 @@
 
   function registrarse() {
     const nombre  = document.getElementById('regNombre').value.trim();
+    const email   = document.getElementById('regEmail').value.trim().toLowerCase();
     const seccion = document.getElementById('regSeccion').value;
     const pin     = document.getElementById('regPin').value;
     const pinConf = document.getElementById('regPinConf').value;
     const errEl   = document.getElementById('regError');
     errEl.style.display = 'none';
     if (!nombre)          { errEl.textContent = 'Ingresa tu nombre completo'; errEl.style.display = 'block'; return; }
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+                          { errEl.textContent = 'Ingresa un correo electrónico válido'; errEl.style.display = 'block'; return; }
     if (!seccion)         { errEl.textContent = 'Selecciona tu sección'; errEl.style.display = 'block'; return; }
     if (pin.length !== 4) { errEl.textContent = 'El PIN debe tener exactamente 4 dígitos'; errEl.style.display = 'block'; return; }
     if (pin !== pinConf)  { errEl.textContent = 'Los PINs no coinciden'; errEl.style.display = 'block'; return; }
     if (!/^\d{4}$/.test(pin)) { errEl.textContent = 'El PIN debe contener solo números'; errEl.style.display = 'block'; return; }
-    localStorage.setItem(PERFIL_KEY, JSON.stringify({ nombre, seccion, pin }));
+    localStorage.setItem(PERFIL_KEY, JSON.stringify({ nombre, email, seccion, pin }));
     sessionStorage.setItem(SESION_APP_KEY, '1');
-    entrarApp({ nombre, seccion });
+    fetch(SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'registrarUsuario', nombre, email, seccion, pin })
+    }).catch(() => {});
+    entrarApp({ nombre, email, seccion });
+  }
+
+  async function recuperarPerfil() {
+    const nombre = document.getElementById('recNombre').value.trim();
+    const pin    = document.getElementById('recPin').value;
+    const errEl  = document.getElementById('recError');
+    errEl.style.display = 'none';
+    if (!nombre) { errEl.textContent = 'Ingresa tu nombre'; errEl.style.display = 'block'; return; }
+    if (pin.length !== 4) { errEl.textContent = 'Ingresa tu PIN de 4 dígitos'; errEl.style.display = 'block'; return; }
+    const btn = document.getElementById('btnRecuperar');
+    btn.disabled = true; btn.textContent = 'Buscando...';
+    try {
+      const r = await fetch(SCRIPT_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'recuperarPerfil', nombre, pin })
+      });
+      const d = await r.json();
+      if (d.resultado === 'ok') {
+        localStorage.setItem(PERFIL_KEY, JSON.stringify({ nombre: d.nombre, email: d.email, seccion: d.seccion, pin: d.pin }));
+        sessionStorage.setItem(SESION_APP_KEY, '1');
+        mostrarToast('¡Perfil recuperado! Bienvenido, ' + d.nombre, 'success');
+        entrarApp({ nombre: d.nombre, email: d.email, seccion: d.seccion });
+      } else {
+        errEl.textContent = d.error || 'No se pudo recuperar el perfil';
+        errEl.style.display = 'block';
+      }
+    } catch {
+      errEl.textContent = 'Error de conexión. Verifica tu internet.';
+      errEl.style.display = 'block';
+    } finally {
+      btn.disabled = false; btn.textContent = 'Recuperar perfil';
+    }
+  }
+
+  function toggleRecuperar() {
+    const panel = document.getElementById('recPanel');
+    const isOpen = panel.style.display !== 'none';
+    panel.style.display = isOpen ? 'none' : 'block';
+    document.getElementById('recToggleBtn').textContent = isOpen
+      ? '¿Ya te registraste en otro dispositivo?'
+      : 'Cancelar recuperación';
   }
 
   function iniciarSesion() {
@@ -2398,6 +2479,7 @@
 
   function irARegistro() {
     document.getElementById('regNombre').value   = '';
+    document.getElementById('regEmail').value    = '';
     document.getElementById('regSeccion').value  = '';
     document.getElementById('regPin').value      = '';
     document.getElementById('regPinConf').value  = '';
