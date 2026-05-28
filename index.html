@@ -618,6 +618,175 @@
     .photo-actions { grid-template-columns: 1fr; }
     .estado-grid { grid-template-columns: 1fr; }
   }
+
+  /* =============================================
+     AUTH OVERLAY — two-panel login / register
+     ============================================= */
+  @keyframes slideUpCard {
+    from { transform: translateY(40px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  .auth-card {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 800px;
+    background: #fff; border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 32px 80px rgba(0,0,0,.55);
+    animation: slideUpCard .35s ease;
+  }
+  .auth-brand {
+    background: linear-gradient(135deg,#7B1827 0%,#4E0D18 100%);
+    padding: 20px 28px; display: flex; align-items: center; gap: 18px;
+  }
+  .auth-brand-logo {
+    background: rgba(255,255,255,.95); border-radius: 12px;
+    padding: 8px 12px; flex-shrink: 0;
+    box-shadow: 0 4px 14px rgba(0,0,0,.25);
+  }
+  .auth-brand-title {
+    font-family: 'Montserrat',sans-serif; font-weight: 900;
+    font-size: 21px; color: #fff; letter-spacing: .5px; line-height: 1.1;
+  }
+  .auth-brand-sub { font-size: 11px; color: rgba(255,255,255,.6); margin-top: 3px; }
+  .auth-panels { display: flex; flex-direction: row; min-height: 380px; }
+  .auth-panel  { flex: 1; padding: 28px 28px 26px; }
+  .auth-panel-left  { background: #fff; }
+  .auth-panel-right { background: #FAF5F6; }
+  .auth-divider-v {
+    width: 1px;
+    background: linear-gradient(to bottom,transparent,#E8D5D8 20%,#E8D5D8 80%,transparent);
+    flex-shrink: 0; position: relative;
+  }
+  .auth-divider-label {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    background: #fff; border: 1.5px solid #E8D5D8; border-radius: 50%;
+    width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10.5px; font-weight: 700; color: #7A5C62;
+  }
+  .panel-eyebrow {
+    display: inline-block; font-family: 'Montserrat',sans-serif;
+    font-size: 10px; font-weight: 700; padding: 3px 10px;
+    border-radius: 20px; text-transform: uppercase; letter-spacing: .7px;
+    margin-bottom: 8px;
+  }
+  .panel-eyebrow-wine { background: #FEE2E2; color: #7B1827; }
+  .panel-eyebrow-gold { background: #FEF3CD; color: #7B5B00; }
+  .panel-title {
+    font-family: 'Montserrat',sans-serif; font-weight: 800;
+    font-size: 17px; color: #1C1214; line-height: 1.2;
+  }
+  .panel-subtitle { font-size: 12px; color: #7A5C62; margin-top: 4px; }
+  .auth-label {
+    font-size: 10.5px; font-weight: 700; color: #7A5C62;
+    text-transform: uppercase; letter-spacing: .5px;
+    display: block; margin-bottom: 6px;
+    font-family: 'Montserrat',sans-serif;
+  }
+  .auth-input {
+    width: 100%; box-sizing: border-box;
+    padding: 10px 12px; border: 1.5px solid #E8D5D8;
+    border-radius: 10px; font-size: 14px; outline: none;
+    font-family: inherit; color: #1C1214; background: #fff;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .auth-input:focus {
+    border-color: #C9A84C;
+    box-shadow: 0 0 0 3px rgba(201,168,76,.13);
+  }
+  .auth-pin-input {
+    width: 100%; box-sizing: border-box; padding: 14px;
+    border: 2px solid #E8D5D8; border-radius: 12px;
+    font-size: 28px; letter-spacing: 16px; text-align: center;
+    outline: none; font-family: inherit; background: #fff;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .auth-pin-input:focus {
+    border-color: #7B1827;
+    box-shadow: 0 0 0 3px rgba(123,24,39,.1);
+  }
+  .auth-pin-sm {
+    width: 100%; box-sizing: border-box; padding: 10px;
+    border: 1.5px solid #E8D5D8; border-radius: 10px;
+    font-size: 20px; letter-spacing: 6px; text-align: center;
+    outline: none; font-family: inherit; background: #fff;
+    transition: border-color .15s;
+  }
+  .auth-pin-sm:focus {
+    border-color: #C9A84C;
+    box-shadow: 0 0 0 3px rgba(201,168,76,.12);
+  }
+  .auth-btn {
+    width: 100%; padding: 12px; border: none; border-radius: 11px;
+    font-weight: 700; font-size: 14px; cursor: pointer;
+    font-family: inherit; letter-spacing: .2px;
+    transition: all .15s; display: block; text-align: center;
+  }
+  .auth-btn-primary {
+    background: #7B1827; color: #fff;
+    box-shadow: 0 4px 14px rgba(123,24,39,.28);
+  }
+  .auth-btn-primary:hover { background: #5A0F19; }
+  .auth-btn-ghost {
+    background: none; border: 1.5px solid #E8D5D8; color: #7A5C62;
+  }
+  .auth-btn-ghost:hover { background: #F7F0F1; }
+  .auth-btn-gold {
+    background: linear-gradient(135deg,#C9A84C,#A8843C); color: #fff;
+    box-shadow: 0 4px 14px rgba(201,168,76,.32);
+  }
+  .auth-btn-gold:hover { background: linear-gradient(135deg,#B8923E,#8D6D2E); }
+  .auth-error-msg {
+    padding: 9px 12px; background: #FEE2E2; border-radius: 8px;
+    color: #B91C1C; font-size: 12px; font-weight: 600;
+    text-align: center; margin-bottom: 8px;
+  }
+  .login-identity-card {
+    display: flex; align-items: center; gap: 12px;
+    background: #F9F4F5; border-radius: 12px;
+    padding: 13px; margin-bottom: 14px;
+    border: 1.5px solid #E8D5D8;
+  }
+  .login-avatar {
+    width: 46px; height: 46px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 800; color: #fff;
+    box-shadow: 0 3px 10px rgba(0,0,0,.18);
+  }
+  .login-name {
+    font-weight: 700; font-size: 14px; color: #1C1214;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .login-section { font-size: 12px; color: #7A5C62; margin-top: 2px; }
+  .no-profile-icon {
+    width: 64px; height: 64px; border-radius: 50%;
+    background: #F7F0F1;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 14px;
+  }
+  .no-profile-text { font-size: 13px; color: #7A5C62; line-height: 1.6; }
+  .auth-footer {
+    background: #FAF3F4; border-top: 1px solid #E8D5D8;
+    padding: 10px 28px; text-align: center;
+    font-size: 11px; color: #7A5C62;
+  }
+  @media (max-width: 640px) {
+    .auth-card  { border-radius: 18px; }
+    .auth-brand { padding: 16px 18px; gap: 12px; }
+    .auth-brand-title { font-size: 17px; }
+    .auth-panels { flex-direction: column; }
+    .auth-panel  { padding: 22px 20px 20px; }
+    .auth-divider-v {
+      width: auto; height: auto; background: none;
+      flex-direction: row; align-items: center; padding: 0 20px; gap: 10px;
+    }
+    .auth-divider-label { position: static; transform: none; }
+    .auth-divider-v::before, .auth-divider-v::after {
+      content: ''; flex: 1; height: 1px; background: #E8D5D8;
+    }
+    .auth-footer { padding: 10px 18px; }
+  }
 </style>
 </head>
 <body>
@@ -653,88 +822,108 @@
 </div>
 
 <!-- OVERLAY INICIO DE SESIÓN / REGISTRO -->
-<div id="appStartOverlay" style="position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;padding:20px">
-  <img src="./swissotel_lima_cover.jpeg" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 40%">
-  <div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(123,24,39,.92) 0%,rgba(60,10,18,.97) 100%)"></div>
+<div id="appStartOverlay" style="position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;padding:16px;overflow-y:auto">
+  <img src="./swissotel_lima_cover.jpeg" style="position:fixed;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 40%;pointer-events:none">
+  <div style="position:fixed;inset:0;background:linear-gradient(160deg,rgba(80,10,20,.93) 0%,rgba(20,4,8,.97) 100%);pointer-events:none"></div>
 
-  <!-- Card central -->
-  <div style="position:relative;z-index:1;width:100%;max-width:360px;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.45);animation:slideUp .3s ease">
+  <div class="auth-card">
 
-    <!-- Marca superior -->
-    <div style="background:var(--primary);padding:24px 20px 20px;text-align:center">
-      <img src="./logoQSF.png" alt="QSF" style="height:52px;width:auto;object-fit:contain;background:#fff;border-radius:10px;padding:6px 10px;margin-bottom:12px">
-      <div style="font-family:Montserrat,sans-serif;font-weight:900;font-size:20px;color:#fff;letter-spacing:.5px">Walk Through</div>
-      <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:2px">Swissotel Lima Peru</div>
+    <!-- Branding header -->
+    <div class="auth-brand">
+      <div class="auth-brand-logo">
+        <img src="./logoQSF.png" alt="QSF" style="height:46px;width:auto;object-fit:contain;display:block">
+      </div>
+      <div>
+        <div class="auth-brand-title">Walk Through</div>
+        <div class="auth-brand-sub">Swissotel Lima Peru &nbsp;·&nbsp; Control de calidad operativo</div>
+      </div>
     </div>
 
-    <!-- VISTA REGISTRO -->
-    <div id="regVista" style="padding:24px">
-      <div style="font-weight:700;font-size:16px;color:var(--text);margin-bottom:4px">Crea tu perfil</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:20px">Solo la primera vez — luego solo usas tu PIN</div>
+    <!-- Two panels -->
+    <div class="auth-panels">
 
-      <div style="margin-bottom:14px">
-        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Tu nombre</label>
-        <input id="regNombre" type="text" placeholder="Escribe tu nombre completo"
-          style="width:100%;box-sizing:border-box;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;outline:none;font-family:inherit;color:var(--text)">
-      </div>
+      <!-- LEFT — existing user login -->
+      <div class="auth-panel auth-panel-left">
+        <div class="panel-eyebrow panel-eyebrow-wine">Ya tengo perfil</div>
+        <div class="panel-title">Ingresar a mi cuenta</div>
+        <div class="panel-subtitle">Introduce tu PIN para continuar</div>
 
-      <div style="margin-bottom:14px">
-        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">Tu sección</label>
-        <select id="regSeccion" style="width:100%;box-sizing:border-box;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:15px;outline:none;font-family:inherit;color:var(--text);background:#fff;appearance:none">
-          <option value="">Selecciona tu sección...</option>
-          <option>Mantenimiento</option><option>Cocina</option>
-          <option>Limpieza</option><option>Sistemas</option>
-        </select>
-      </div>
-
-      <div style="margin-bottom:14px">
-        <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:6px">PIN de acceso (4 dígitos)</label>
-        <div style="display:flex;gap:8px">
-          <input id="regPin" type="password" inputmode="numeric" maxlength="4" placeholder="••••"
-            style="flex:1;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:22px;outline:none;font-family:inherit;letter-spacing:8px;text-align:center">
-          <input id="regPinConf" type="password" inputmode="numeric" maxlength="4" placeholder="••••"
-            style="flex:1;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:22px;outline:none;font-family:inherit;letter-spacing:8px;text-align:center">
+        <!-- Logged-out but profile exists -->
+        <div id="loginVista" style="display:none;margin-top:18px">
+          <div class="login-identity-card">
+            <div id="loginAvatar" class="login-avatar"></div>
+            <div style="min-width:0">
+              <div id="loginNombreText" class="login-name"></div>
+              <div id="loginSeccionText" class="login-section"></div>
+            </div>
+          </div>
+          <label class="auth-label" style="text-align:center;margin-bottom:8px">PIN de acceso</label>
+          <input id="loginPin" type="password" inputmode="numeric" maxlength="4" placeholder="• • • •"
+            autocomplete="off"
+            onkeydown="if(event.key==='Enter')iniciarSesion()"
+            oninput="if(this.value.length===4)iniciarSesion()"
+            class="auth-pin-input">
+          <div id="loginError" style="display:none;margin-top:8px" class="auth-error-msg"></div>
+          <button onclick="iniciarSesion()" class="auth-btn auth-btn-primary" style="margin-top:12px">Ingresar</button>
+          <button onclick="cambiarPerfil()" class="auth-btn auth-btn-ghost" style="margin-top:8px">No soy yo — cambiar perfil</button>
         </div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px;text-align:center">Confirma tu PIN a la derecha</div>
+
+        <!-- No profile created yet -->
+        <div id="loginNoPerfilMsg" style="margin-top:28px;text-align:center">
+          <div class="no-profile-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="1.5" style="width:28px;height:28px"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+          </div>
+          <p class="no-profile-text">Crea tu perfil en el panel de la derecha para poder ingresar</p>
+        </div>
       </div>
 
-      <div id="regError" style="display:none;padding:10px;background:#FEE2E2;border-radius:8px;color:#B91C1C;font-size:13px;font-weight:600;text-align:center;margin-bottom:12px"></div>
-      <button onclick="registrarse()" style="width:100%;padding:14px;background:var(--primary);color:#fff;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit">
-        Crear perfil e ingresar
-      </button>
+      <!-- Vertical divider -->
+      <div class="auth-divider-v">
+        <span class="auth-divider-label">O</span>
+      </div>
+
+      <!-- RIGHT — new user registration -->
+      <div class="auth-panel auth-panel-right">
+        <div class="panel-eyebrow panel-eyebrow-gold">Nuevo usuario</div>
+        <div class="panel-title">Crea tu perfil</div>
+        <div class="panel-subtitle">Solo la primera vez &nbsp;·&nbsp; luego solo usas tu PIN</div>
+
+        <div id="regVista" style="margin-top:18px">
+          <div style="margin-bottom:11px">
+            <label class="auth-label">Tu nombre completo</label>
+            <input id="regNombre" type="text" placeholder="Escribe tu nombre"
+              class="auth-input" autocomplete="off">
+          </div>
+          <div style="margin-bottom:11px">
+            <label class="auth-label">Tu sección</label>
+            <div style="position:relative">
+              <select id="regSeccion" class="auth-input" style="padding-right:36px;cursor:pointer;-webkit-appearance:none;appearance:none">
+                <option value="">Selecciona tu sección...</option>
+                <option>Mantenimiento</option><option>Cocina</option>
+                <option>Limpieza</option><option>Sistemas</option>
+              </select>
+              <svg viewBox="0 0 24 24" fill="none" stroke="#7A5C62" stroke-width="2" style="width:14px;height:14px;position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+          </div>
+          <div style="margin-bottom:11px">
+            <label class="auth-label">PIN de acceso <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px">(4 dígitos)</span></label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+              <input id="regPin" type="password" inputmode="numeric" maxlength="4" placeholder="Crear"
+                class="auth-pin-sm">
+              <input id="regPinConf" type="password" inputmode="numeric" maxlength="4" placeholder="Confirmar"
+                class="auth-pin-sm">
+            </div>
+            <div style="font-size:10.5px;color:#7A5C62;text-align:center;margin-top:5px">Escribe el mismo PIN en ambos campos</div>
+          </div>
+          <div id="regError" style="display:none" class="auth-error-msg"></div>
+          <button onclick="registrarse()" class="auth-btn auth-btn-gold">Crear perfil e ingresar →</button>
+        </div>
+      </div>
+
     </div>
 
-    <!-- VISTA LOGIN -->
-    <div id="loginVista" style="display:none;padding:24px">
-      <div style="text-align:center;margin-bottom:20px">
-        <div id="loginAvatar" style="width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;margin:0 auto 10px"></div>
-        <div id="loginNombreText" style="font-weight:700;font-size:17px;color:var(--text)"></div>
-        <div id="loginSeccionText" style="font-size:12px;color:var(--muted);margin-top:2px"></div>
-      </div>
-
-      <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:8px;text-align:center">Ingresa tu PIN</label>
-      <div style="position:relative;margin-bottom:6px">
-        <input id="loginPin" type="password" inputmode="numeric" maxlength="4" placeholder="• • • •"
-          autocomplete="off"
-          onkeydown="if(event.key==='Enter')iniciarSesion()"
-          oninput="if(this.value.length===4)iniciarSesion()"
-          style="width:100%;box-sizing:border-box;padding:16px;border:2px solid var(--border);border-radius:12px;font-size:28px;letter-spacing:16px;text-align:center;outline:none;font-family:inherit">
-      </div>
-
-      <div id="loginError" style="display:none;padding:10px;background:#FEE2E2;border-radius:8px;color:#B91C1C;font-size:13px;font-weight:600;text-align:center;margin-bottom:12px"></div>
-      <button onclick="iniciarSesion()" style="width:100%;padding:14px;background:var(--primary);color:#fff;border:none;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit;margin-bottom:10px">
-        Ingresar
-      </button>
-      <button onclick="cambiarPerfil()" style="width:100%;padding:10px;background:none;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-size:13px;cursor:pointer;font-family:inherit;margin-bottom:8px">
-        No soy yo — cambiar perfil
-      </button>
-      <div style="text-align:center;padding-top:4px">
-        <span style="font-size:12px;color:var(--muted)">¿Primera vez en este dispositivo?</span>
-        <button onclick="irARegistro()" style="background:none;border:none;color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:underline;padding:0 4px">
-          Crear nuevo perfil
-        </button>
-      </div>
-    </div>
+    <!-- Footer strip -->
+    <div class="auth-footer">© Swissotel Lima Peru &nbsp;·&nbsp; Sistema de control Walk Through</div>
 
   </div>
 </div>
@@ -2123,8 +2312,9 @@
   function initApp() {
     const perfil = obtenerPerfil();
     if (!perfil) {
-      document.getElementById('regVista').style.display = 'block';
+      // No profile: show "create profile" prompt on left panel
       document.getElementById('loginVista').style.display = 'none';
+      document.getElementById('loginNoPerfilMsg').style.display = 'block';
       document.getElementById('appStartOverlay').style.display = 'flex';
     } else if (!sessionStorage.getItem(SESION_APP_KEY)) {
       mostrarLoginVista(perfil);
@@ -2135,7 +2325,7 @@
   }
 
   function mostrarLoginVista(perfil) {
-    document.getElementById('regVista').style.display = 'none';
+    document.getElementById('loginNoPerfilMsg').style.display = 'none';
     document.getElementById('loginVista').style.display = 'block';
     const col = avatarColor(perfil.nombre);
     document.getElementById('loginAvatar').style.background = col;
@@ -2212,14 +2402,18 @@
     document.getElementById('regPin').value      = '';
     document.getElementById('regPinConf').value  = '';
     document.getElementById('regError').style.display = 'none';
-    document.getElementById('regVista').style.display   = 'block';
-    document.getElementById('loginVista').style.display = 'none';
+    // Both panels are always visible; on mobile scroll to top so reg panel is visible
+    const ov = document.getElementById('appStartOverlay');
+    ov.scrollTop = 0;
+    setTimeout(() => document.getElementById('regNombre').focus(), 200);
   }
 
   function cambiarPerfil() {
     if (!confirm('¿Deseas cambiar de perfil? Tendrás que volver a registrarte.')) return;
     localStorage.removeItem(PERFIL_KEY);
     sessionStorage.removeItem(SESION_APP_KEY);
+    document.getElementById('loginVista').style.display     = 'none';
+    document.getElementById('loginNoPerfilMsg').style.display = 'block';
     irARegistro();
     document.getElementById('appStartOverlay').style.display = 'flex';
   }
