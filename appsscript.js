@@ -104,6 +104,12 @@ function doPost(e) {
       return buildResponse(recuperarPerfilDesdeSheets(p.email || '', p.pinHash || p.pin || ''));
     }
 
+    // Acción: refrescar hoja Resumen manualmente
+    if (p.action === 'actualizarResumen') {
+      actualizarResumen();
+      return buildResponse({ resultado: 'ok' });
+    }
+
     // Acción: levantar observación existente
     if (p.action === 'levantar') {
       const out = levantarObservacion(
@@ -131,7 +137,8 @@ function doPost(e) {
       departamento:  p.departamento || '',
       estado:        p.estado || '',
       urlFoto:      fotoInfo.url,
-      idFoto:       fotoInfo.id
+      idFoto:       fotoInfo.id,
+      idEnvio:      p.idEnvio || ''
     };
     const id = guardarEnSheets(datosGuardar);
     if (emailUsuario) {
@@ -896,6 +903,272 @@ function enviarEmailLevantamiento(codigo, comentario, estado, emailUsuario, nomb
 </body></html>`;
 
   enviarEmailBrevo(emailUsuario, '✅ Levantamiento registrado · ' + codigo + ' · ' + estado, html);
+}
+
+// =============================================
+// HOJA RESUMEN / DASHBOARD
+// =============================================
+function actualizarResumen() {
+  try {
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const tz = Session.getScriptTimeZone();
+
+    // ── Recopilar datos de todas las hojas de evidencia ──────────────────
+    const hojas = ss.getSheets().filter(function(h) {
+      return h.getName() !== 'Usuarios' && h.getName() !== 'Resumen';
+    });
+
+    var total = 0, pendiente = 0, recurrente = 0, corregido = 0;
+    var porArea = {};
+    var porMes  = {};
+
+    hojas.forEach(function(hoja) {
+      var area   = hoja.getName();
+      var ultima = hoja.getLastRow();
+      if (ultima < FILA_DATOS) return;
+      var n    = ultima - FILA_DATOS + 1;
+      var vals = hoja.getRange(FILA_DATOS, 1, n, 12).getValues();
+      if (!porArea[area]) porArea[area] = { t:0, p:0, r:0, c:0 };
+      vals.forEach(function(row) {
+        var est  = String(row[8] || '').trim();  // col 9 = estado
+        var fRaw = row[11];                       // col 12 = fecha
+        total++;
+        porArea[area].t++;
+        if      (est === 'Pendiente')  { pendiente++;  porArea[area].p++; }
+        else if (est === 'Recurrente') { recurrente++; porArea[area].r++; }
+        else if (est === 'Corregido')  { corregido++;  porArea[area].c++; }
+        var fd = fRaw instanceof Date ? fRaw : new Date(fRaw);
+        if (isNaN(fd.getTime())) {
+          var s = String(fRaw).replace(/,/g, '').trim().split(/\s+/)[0];
+          var pp = s.split('/');
+          if (pp.length === 3) fd = new Date(+pp[2], +pp[1]-1, +pp[0]);
+        }
+        if (!isNaN(fd.getTime())) {
+          var ym = Utilities.formatDate(fd, tz, 'yyyy-MM');
+          if (!porMes[ym]) porMes[ym] = { t:0, c:0 };
+          porMes[ym].t++;
+          if (est === 'Corregido') porMes[ym].c++;
+        }
+      });
+    });
+
+    var pctTotal = total > 0 ? Math.round(corregido / total * 100) : 0;
+    var ahora    = Utilities.formatDate(new Date(), tz, 'dd/MM/yyyy HH:mm');
+
+    // ── Preparar hoja Resumen ────────────────────────────────────────────
+    var hoja = ss.getSheetByName('Resumen');
+    if (!hoja) {
+      hoja = ss.insertSheet('Resumen', 0);
+    } else {
+      hoja.clearContents();
+      hoja.clearFormats();
+      hoja.getCharts().forEach(function(c) { hoja.removeChart(c); });
+    }
+    ss.setActiveSheet(hoja);
+    ss.moveActiveSheet(1);
+
+    // Anchos de columna: AREA | TOTAL | PENDIENTE | RECURRENTE | CORREGIDO | % | BARRA
+    [200, 80, 100, 110, 100, 105, 170].forEach(function(w, i) { hoja.setColumnWidth(i+1, w); });
+
+    var f = 1;
+
+    // ── Título ───────────────────────────────────────────────────────────
+    hoja.setRowHeight(f, 56);
+    hoja.getRange(f, 1, 1, 7).merge()
+      .setValue('RESUMEN EJECUTIVO  ·  WALK THROUGH  ·  ' + HOTEL_NOMBRE.toUpperCase())
+      .setBackground('#7B1827').setFontColor('#FFFFFF')
+      .setFontWeight('bold').setFontSize(15)
+      .setHorizontalAlignment('center').setVerticalAlignment('middle');
+    f++;
+
+    // ── Timestamp ────────────────────────────────────────────────────────
+    hoja.setRowHeight(f, 26);
+    hoja.getRange(f, 1, 1, 7).merge()
+      .setValue('Actualizado: ' + ahora + '   ·   ' + hojas.length + ' area(s) activas')
+      .setBackground('#F5ECED').setFontColor('#9B7B82')
+      .setFontSize(10).setHorizontalAlignment('center').setVerticalAlignment('middle');
+    f++;
+
+    // ── Espaciador ───────────────────────────────────────────────────────
+    hoja.setRowHeight(f, 12); hoja.getRange(f, 1, 1, 7).setBackground('#F0EBEC'); f++;
+
+    // ── KPI Cards (2 filas) ───────────────────────────────────────────────
+    hoja.setRowHeight(f, 26); hoja.setRowHeight(f+1, 62);
+
+    // Total (cols 1+2)
+    hoja.getRange(f, 1, 1, 2).merge()
+      .setValue('TOTAL REGISTROS').setBackground('#1C1214').setFontColor('#C9A84C')
+      .setFontWeight('bold').setFontSize(9).setHorizontalAlignment('center').setVerticalAlignment('middle');
+    hoja.getRange(f+1, 1, 1, 2).merge()
+      .setValue(total).setBackground('#1C1214').setFontColor('#FFFFFF')
+      .setFontWeight('bold').setFontSize(32).setHorizontalAlignment('center').setVerticalAlignment('middle');
+
+    // Pendiente (col 3)
+    var pPend = total > 0 ? Math.round(pendiente/total*100) : 0;
+    hoja.getRange(f, 3).setValue('PENDIENTES').setBackground('#7B1827').setFontColor('#FCA5A5')
+      .setFontWeight('bold').setFontSize(9).setHorizontalAlignment('center').setVerticalAlignment('middle');
+    hoja.getRange(f+1, 3).setValue(pendiente + '\n' + pPend + '%')
+      .setBackground('#C0392B').setFontColor('#FFFFFF').setFontWeight('bold').setFontSize(20).setWrap(true)
+      .setHorizontalAlignment('center').setVerticalAlignment('middle');
+
+    // Recurrente (col 4)
+    var pRec = total > 0 ? Math.round(recurrente/total*100) : 0;
+    hoja.getRange(f, 4).setValue('RECURRENTES').setBackground('#7F4F00').setFontColor('#FED7AA')
+      .setFontWeight('bold').setFontSize(9).setHorizontalAlignment('center').setVerticalAlignment('middle');
+    hoja.getRange(f+1, 4).setValue(recurrente + '\n' + pRec + '%')
+      .setBackground('#E67E22').setFontColor('#FFFFFF').setFontWeight('bold').setFontSize(20).setWrap(true)
+      .setHorizontalAlignment('center').setVerticalAlignment('middle');
+
+    // Corregido (col 5)
+    var pCorr = total > 0 ? Math.round(corregido/total*100) : 0;
+    hoja.getRange(f, 5).setValue('CORREGIDOS').setBackground('#145A32').setFontColor('#A7F3D0')
+      .setFontWeight('bold').setFontSize(9).setHorizontalAlignment('center').setVerticalAlignment('middle');
+    hoja.getRange(f+1, 5).setValue(corregido + '\n' + pCorr + '%')
+      .setBackground('#1A7F54').setFontColor('#FFFFFF').setFontWeight('bold').setFontSize(20).setWrap(true)
+      .setHorizontalAlignment('center').setVerticalAlignment('middle');
+
+    // % Cumplimiento (cols 6+7)
+    var bgPct = pctTotal >= 75 ? '#1A7F54' : pctTotal >= 50 ? '#E67E22' : '#C0392B';
+    hoja.getRange(f, 6, 1, 2).merge().setValue('% CUMPLIMIENTO')
+      .setBackground('#1B4F72').setFontColor('#93C6E7')
+      .setFontWeight('bold').setFontSize(9).setHorizontalAlignment('center').setVerticalAlignment('middle');
+    hoja.getRange(f+1, 6, 1, 2).merge().setValue(pctTotal + '%')
+      .setBackground(bgPct).setFontColor('#FFFFFF')
+      .setFontWeight('bold').setFontSize(36).setHorizontalAlignment('center').setVerticalAlignment('middle');
+
+    f += 2;
+
+    // ── Espaciador ───────────────────────────────────────────────────────
+    hoja.setRowHeight(f, 12); hoja.getRange(f, 1, 1, 7).setBackground('#F0EBEC'); f++;
+
+    // ── Sección: Detalle por área ─────────────────────────────────────────
+    hoja.setRowHeight(f, 30);
+    hoja.getRange(f, 1, 1, 7).merge().setValue('  DETALLE POR AREA')
+      .setBackground('#2C3E50').setFontColor('#ECF0F1')
+      .setFontWeight('bold').setFontSize(11).setHorizontalAlignment('left').setVerticalAlignment('middle');
+    f++;
+
+    hoja.setRowHeight(f, 34);
+    hoja.getRange(f, 1, 1, 7)
+      .setValues([['AREA / SUBAREA', 'TOTAL', 'PENDIENTE', 'RECURRENTE', 'CORREGIDO', '% RESUELTO', 'AVANCE']])
+      .setBackground('#3D2729').setFontColor('#FFFFFF').setFontWeight('bold').setFontSize(10)
+      .setHorizontalAlignment('center').setVerticalAlignment('middle');
+    hoja.getRange(f, 1).setHorizontalAlignment('left');
+    f++;
+
+    // Filas de áreas ordenadas por total desc
+    var areasOrd = Object.keys(porArea)
+      .map(function(k) { return [k, porArea[k]]; })
+      .sort(function(a, b) { return b[1].t - a[1].t; });
+
+    areasOrd.forEach(function(entry, idx) {
+      var area = entry[0], d = entry[1];
+      var pA   = d.t > 0 ? Math.round(d.c / d.t * 100) : 0;
+      var ll   = Math.round(pA / 10);
+      var bar  = '█'.repeat(ll) + '░'.repeat(10-ll) + '  ' + pA + '%';
+      var col  = pA >= 75 ? '#1A7F54' : pA >= 50 ? '#E67E22' : '#C0392B';
+      var fondo = idx % 2 === 0 ? '#FFFFFF' : '#F8F4F5';
+
+      hoja.setRowHeight(f, 28);
+      hoja.getRange(f, 1, 1, 7).setValues([[area, d.t, d.p, d.r, d.c, pA + '%', bar]])
+        .setBackground(fondo).setFontSize(10).setHorizontalAlignment('center').setVerticalAlignment('middle')
+        .setBorder(false, false, true, false, false, false, '#E8DFE0', SpreadsheetApp.BorderStyle.SOLID);
+      hoja.getRange(f, 1).setHorizontalAlignment('left').setFontWeight('bold');
+      hoja.getRange(f, 3).setFontColor(d.p > 0 ? '#C0392B' : '#AAAAAA').setFontWeight(d.p > 0 ? 'bold' : 'normal');
+      hoja.getRange(f, 4).setFontColor(d.r > 0 ? '#E67E22' : '#AAAAAA').setFontWeight(d.r > 0 ? 'bold' : 'normal');
+      hoja.getRange(f, 5).setFontColor(d.c > 0 ? '#1A7F54' : '#AAAAAA').setFontWeight(d.c > 0 ? 'bold' : 'normal');
+      hoja.getRange(f, 6).setFontColor(col).setFontWeight('bold');
+      hoja.getRange(f, 7).setFontFamily('Courier New').setFontSize(9).setFontColor(col);
+      f++;
+    });
+
+    // Fila de totales generales
+    if (areasOrd.length > 0) {
+      var llT = Math.round(pctTotal / 10);
+      var barT = '█'.repeat(llT) + '░'.repeat(10-llT) + '  ' + pctTotal + '%';
+      var colT = pctTotal >= 75 ? '#90EE90' : pctTotal >= 50 ? '#FFD700' : '#FF8080';
+      hoja.setRowHeight(f, 32);
+      hoja.getRange(f, 1, 1, 7)
+        .setValues([['TOTAL GENERAL', total, pendiente, recurrente, corregido, pctTotal + '%', barT]])
+        .setBackground('#2C3E50').setFontColor('#FFFFFF').setFontWeight('bold').setFontSize(10)
+        .setHorizontalAlignment('center').setVerticalAlignment('middle');
+      hoja.getRange(f, 1).setHorizontalAlignment('left');
+      hoja.getRange(f, 6).setFontColor(colT);
+      hoja.getRange(f, 7).setFontFamily('Courier New').setFontSize(9).setFontColor(colT);
+      f++;
+    }
+
+    // ── Espaciador ───────────────────────────────────────────────────────
+    hoja.setRowHeight(f, 12); hoja.getRange(f, 1, 1, 7).setBackground('#F0EBEC'); f++;
+
+    // ── Sección: Tendencia mensual ────────────────────────────────────────
+    var mesesOrd = Object.keys(porMes)
+      .sort(function(a, b) { return b.localeCompare(a); })
+      .slice(0, 6)
+      .map(function(k) { return [k, porMes[k]]; });
+
+    if (mesesOrd.length > 0) {
+      hoja.setRowHeight(f, 30);
+      hoja.getRange(f, 1, 1, 7).merge()
+        .setValue('  TENDENCIA MENSUAL  (ultimos ' + mesesOrd.length + ' meses)')
+        .setBackground('#2C3E50').setFontColor('#ECF0F1')
+        .setFontWeight('bold').setFontSize(11).setHorizontalAlignment('left').setVerticalAlignment('middle');
+      f++;
+
+      hoja.setRowHeight(f, 34);
+      hoja.getRange(f, 1, 1, 5)
+        .setValues([['MES', 'REGISTROS', 'CORREGIDOS', '% RESUELTO', 'AVANCE']])
+        .setBackground('#3D2729').setFontColor('#FFFFFF').setFontWeight('bold').setFontSize(10)
+        .setHorizontalAlignment('center').setVerticalAlignment('middle');
+      hoja.getRange(f, 1).setHorizontalAlignment('left');
+      f++;
+
+      mesesOrd.forEach(function(entry, idx) {
+        var ym = entry[0], d = entry[1];
+        var partes = ym.split('-');
+        var pM   = d.t > 0 ? Math.round(d.c / d.t * 100) : 0;
+        var llM  = Math.round(pM / 10);
+        var barM = '█'.repeat(llM) + '░'.repeat(10-llM) + '  ' + pM + '%';
+        var colM = pM >= 75 ? '#1A7F54' : pM >= 50 ? '#E67E22' : '#C0392B';
+        var nMes = MESES[parseInt(partes[1])-1] + ' ' + partes[0];
+        var fondo = idx === 0 ? '#FEF9C3' : (idx % 2 === 0 ? '#FFFFFF' : '#F8F4F5');
+
+        hoja.setRowHeight(f, 28);
+        hoja.getRange(f, 1, 1, 5).setValues([[nMes, d.t, d.c, pM + '%', barM]])
+          .setBackground(fondo).setFontSize(10).setHorizontalAlignment('center').setVerticalAlignment('middle')
+          .setBorder(false, false, true, false, false, false, '#E8DFE0', SpreadsheetApp.BorderStyle.SOLID);
+        hoja.getRange(f, 1).setHorizontalAlignment('left').setFontWeight(idx === 0 ? 'bold' : 'normal');
+        hoja.getRange(f, 3).setFontColor('#1A7F54').setFontWeight('bold');
+        hoja.getRange(f, 4).setFontColor(colM).setFontWeight('bold');
+        hoja.getRange(f, 5).setFontFamily('Courier New').setFontSize(9).setFontColor(colM);
+        f++;
+      });
+    }
+
+    // ── Footer ────────────────────────────────────────────────────────────
+    hoja.setRowHeight(f, 12); hoja.getRange(f, 1, 1, 7).setBackground('#F0EBEC'); f++;
+    hoja.setRowHeight(f, 22);
+    hoja.getRange(f, 1, 1, 7).merge()
+      .setValue('Walk Through  ·  Swissotel Lima Peru  ·  Actualizacion automatica cada 10 min')
+      .setBackground('#3D2729').setFontColor('#9B7B82')
+      .setFontSize(9).setHorizontalAlignment('center').setVerticalAlignment('middle');
+
+    hoja.setFrozenRows(2);
+    SpreadsheetApp.flush();
+
+  } catch (err) {
+    console.error('actualizarResumen: ' + err.message);
+  }
+}
+
+// Ejecutar una vez desde el IDE para activar actualizaciones automaticas cada 10 min
+function configurarTrigger() {
+  ScriptApp.getProjectTriggers().forEach(function(t) {
+    if (t.getHandlerFunction() === 'actualizarResumen') ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger('actualizarResumen').timeBased().everyMinutes(10).create();
+  actualizarResumen();
+  Logger.log('Trigger activo: actualizarResumen cada 10 minutos');
 }
 
 // =============================================
