@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https: data: blob:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://script.google.com https://api.brevo.com https://api.qrserver.com https://fonts.googleapis.com https://fonts.gstatic.com;">
 <title>Walk Through - Swissotel Lima Peru</title>
 <link rel="icon" type="image/png" href="./swissotel_lima_cover.jpeg">
 <link rel="manifest" href="./manifest.webmanifest">
@@ -1847,6 +1848,7 @@
     const _p = obtenerPerfil();
     if (_p && _p.email) payload.emailUsuario = _p.email;
     if (_p && _p.nombre) payload.nombreUsuario = _p.nombre;
+    payload.appToken = APP_TOKEN;
 
     try {
       setProgreso(60);
@@ -2295,9 +2297,19 @@
   // =============================================
   // PERFIL Y SESIÓN DE USUARIO
   // =============================================
-  const PERFIL_KEY    = 'wt_perfil';
-  const SESION_APP_KEY = 'wt_sesion_app';
-  const AVATAR_COLORES = ['#7B1827','#0F766E','#7C3AED','#B45309','#0369A1','#BE185D','#15803D'];
+  const PERFIL_KEY     = 'wt_perfil';
+  const SESION_APP_KEY  = 'wt_sesion_app';
+  const APP_TOKEN       = 'wts-2026-k9x7m';
+  const PIN_SALT        = 'walk-through-swissotel-2026';
+  const AVATAR_COLORES  = ['#7B1827','#0F766E','#7C3AED','#B45309','#0369A1','#BE185D','#15803D'];
+
+  async function hashearPIN(pin) {
+    const data = new TextEncoder().encode(PIN_SALT + ':' + pin);
+    const buf  = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+
+  function esHashValido(v) { return typeof v === 'string' && /^[0-9a-f]{64}$/.test(v); }
 
   function avatarColor(nombre) {
     let n = 0; for (const c of nombre) n += c.charCodeAt(0);
@@ -2381,11 +2393,12 @@
     if (pin.length !== 4) { errEl.textContent = 'El PIN debe tener exactamente 4 dígitos'; errEl.style.display = 'block'; return; }
     if (pin !== pinConf)  { errEl.textContent = 'Los PINs no coinciden'; errEl.style.display = 'block'; return; }
     if (!/^\d{4}$/.test(pin)) { errEl.textContent = 'El PIN debe contener solo números'; errEl.style.display = 'block'; return; }
-    localStorage.setItem(PERFIL_KEY, JSON.stringify({ nombre, email, seccion, pin }));
+    const pinHash = await hashearPIN(pin);
+    localStorage.setItem(PERFIL_KEY, JSON.stringify({ nombre, email, seccion, pinHash }));
     sessionStorage.setItem(SESION_APP_KEY, '1');
     fetch(SCRIPT_URL, {
       method: 'POST',
-      body: JSON.stringify({ action: 'registrarUsuario', nombre, email, seccion, pin })
+      body: JSON.stringify({ action: 'registrarUsuario', nombre, email, seccion, pinHash, appToken: APP_TOKEN })
     }).catch(() => {});
     entrarApp({ nombre, email, seccion });
   }
@@ -2400,13 +2413,14 @@
     const btn = document.getElementById('btnRecuperar');
     btn.disabled = true; btn.textContent = 'Buscando...';
     try {
+      const pinHash = await hashearPIN(pin);
       const r = await fetch(SCRIPT_URL, {
         method: 'POST',
-        body: JSON.stringify({ action: 'recuperarPerfil', email, pin })
+        body: JSON.stringify({ action: 'recuperarPerfil', email, pinHash, appToken: APP_TOKEN })
       });
       const d = await r.json();
       if (d.resultado === 'ok') {
-        localStorage.setItem(PERFIL_KEY, JSON.stringify({ nombre: d.nombre, email: d.email, seccion: d.seccion, pin: d.pin }));
+        localStorage.setItem(PERFIL_KEY, JSON.stringify({ nombre: d.nombre, email: d.email, seccion: d.seccion, pinHash }));
         sessionStorage.setItem(SESION_APP_KEY, '1');
         mostrarToast('¡Perfil recuperado! Bienvenido, ' + d.nombre, 'success');
         entrarApp({ nombre: d.nombre, email: d.email, seccion: d.seccion });
@@ -2438,23 +2452,29 @@
     errEl.style.display = 'none';
 
     if (perfil) {
-      // Dispositivo conocido: verificar PIN localmente
+      // Dispositivo conocido: verificar PIN comparando hash
       if (pin.length !== 4) {
         errEl.textContent = 'Ingresa tu PIN de 4 dígitos';
         errEl.style.display = 'block';
         return;
       }
-      if (pin !== perfil.pin) {
+      const entradaHash = await hashearPIN(pin);
+      const hashAlmacenado = esHashValido(perfil.pinHash) ? perfil.pinHash : await hashearPIN(perfil.pin || '');
+      if (entradaHash !== hashAlmacenado) {
         errEl.textContent = 'PIN incorrecto. Inténtalo de nuevo.';
         errEl.style.display = 'block';
         document.getElementById('loginPin').value = '';
         document.getElementById('loginPin').focus();
         return;
       }
+      if (!esHashValido(perfil.pinHash)) {
+        const { pin: _raw, ...sinPin } = perfil;
+        localStorage.setItem(PERFIL_KEY, JSON.stringify({ ...sinPin, pinHash: entradaHash }));
+      }
       sessionStorage.setItem(SESION_APP_KEY, '1');
       entrarApp(perfil);
     } else {
-      // Dispositivo nuevo: recuperar perfil desde Sheets con email + PIN
+      // Dispositivo nuevo: recuperar perfil desde Sheets con email + pinHash
       const email = document.getElementById('loginEmailRec').value.trim().toLowerCase();
       if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         errEl.textContent = 'Ingresa un correo electrónico válido';
@@ -2472,13 +2492,14 @@
       const textoOriginal = btn.textContent;
       btn.disabled = true; btn.textContent = 'Verificando...';
       try {
+        const pinHash = await hashearPIN(pin);
         const r = await fetch(SCRIPT_URL, {
           method: 'POST',
-          body: JSON.stringify({ action: 'recuperarPerfil', email, pin })
+          body: JSON.stringify({ action: 'recuperarPerfil', email, pinHash, appToken: APP_TOKEN })
         });
         const d = await r.json();
         if (d.resultado === 'ok') {
-          localStorage.setItem(PERFIL_KEY, JSON.stringify({ nombre: d.nombre, email: d.email, seccion: d.seccion, pin: d.pin }));
+          localStorage.setItem(PERFIL_KEY, JSON.stringify({ nombre: d.nombre, email: d.email, seccion: d.seccion, pinHash }));
           sessionStorage.setItem(SESION_APP_KEY, '1');
           mostrarToast('¡Bienvenido de nuevo, ' + d.nombre + '!', 'success');
           entrarApp({ nombre: d.nombre, email: d.email, seccion: d.seccion });
@@ -2740,6 +2761,7 @@
       const _p2 = obtenerPerfil();
       if (_p2 && _p2.email) payload.emailUsuario = _p2.email;
       if (_p2 && _p2.nombre) payload.nombreUsuario = _p2.nombre;
+      payload.appToken = APP_TOKEN;
 
       const res  = await fetch(SCRIPT_URL, { method:'POST', body: JSON.stringify(payload) });
       const data = await res.json();
