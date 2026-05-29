@@ -775,8 +775,8 @@
       <img class="header-logo" src="./logoQSF.png" alt="Logo QSF">
     </div>
     <div class="header-text">
-      <div class="header-title">Walk Through</div>
-      <div class="header-sub">Swissotel Lima Peru · Registro fotográfico operativo</div>
+      <div id="headerTitleEl" class="header-title">Walk Through</div>
+      <div id="headerSubEl" class="header-sub">Swissotel Lima Peru · Registro fotográfico operativo</div>
     </div>
   </div>
 </header>
@@ -808,12 +808,37 @@
       <div class="fl-brand-logo-wrap">
         <img src="./logoQSF.png" alt="QSF">
       </div>
-      <div class="fl-brand-title">WALK THROUGH</div>
-      <div class="fl-brand-sub">Swissotel Lima Peru &nbsp;·&nbsp; Control de calidad operativo</div>
+      <div id="flBrandTitleEl" class="fl-brand-title">WALK THROUGH</div>
+      <div id="flBrandSubEl" class="fl-brand-sub">Swissotel Lima Peru &nbsp;·&nbsp; Control de calidad operativo</div>
+    </div>
+
+    <!-- ── SELECTOR DE MÓDULO ── -->
+    <div id="modoSelectorVista" style="display:none">
+      <h2 class="fl-panel-title">Selecciona el módulo</h2>
+      <p class="fl-panel-sub">¿Qué vas a realizar hoy?</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0 4px">
+
+        <button onclick="seleccionarModo('walkthrough')" style="background:linear-gradient(145deg,#7B1827,#5C1020);border:none;border-radius:16px;padding:24px 12px;cursor:pointer;color:#fff;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 4px 16px rgba(123,24,39,.45);-webkit-tap-highlight-color:transparent">
+          <div style="background:rgba(255,255,255,.15);border-radius:12px;padding:11px;display:flex;align-items:center;justify-content:center">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="m9 12 2 2 4-4"/></svg>
+          </div>
+          <div style="font-size:13px;font-weight:900;letter-spacing:1.5px;line-height:1.3;text-align:center">WALK<br>THROUGH</div>
+          <div style="font-size:10px;opacity:.75;font-weight:400;text-align:center">Control operativo</div>
+        </button>
+
+        <button onclick="seleccionarModo('calidad')" style="background:linear-gradient(145deg,#1B4F72,#0E2E45);border:none;border-radius:16px;padding:24px 12px;cursor:pointer;color:#fff;display:flex;flex-direction:column;align-items:center;gap:10px;box-shadow:0 4px 16px rgba(27,79,114,.45);-webkit-tap-highlight-color:transparent">
+          <div style="background:rgba(255,255,255,.15);border-radius:12px;padding:11px;display:flex;align-items:center;justify-content:center">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+          </div>
+          <div style="font-size:13px;font-weight:900;letter-spacing:1.5px;line-height:1.3;text-align:center">CALIDAD</div>
+          <div style="font-size:10px;opacity:.75;font-weight:400;text-align:center">Auditorías QA</div>
+        </button>
+
+      </div>
     </div>
 
     <!-- ── PANEL LOGIN ── -->
-    <div id="loginVista">
+    <div id="loginVista" style="display:none">
       <h2 class="fl-panel-title">Inicia sesión</h2>
       <p class="fl-panel-sub">Ingresa con tu perfil para acceder al sistema</p>
 
@@ -1374,8 +1399,8 @@
   <div class="field-group" id="grupoSeccion">
     <div class="field-label">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></svg>
-      Sección
-      <span style="font-size:10px;color:var(--muted);font-weight:400;margin-left:4px">(pestaña en Excel)</span>
+      <span id="labelAreaTitulo">Sección</span>
+      <span id="labelAreaHoja" style="font-size:10px;color:var(--muted);font-weight:400;margin-left:4px">(pestaña en Excel)</span>
     </div>
     <div class="area-combo" id="areaCombo">
       <div class="area-search-wrap">
@@ -1855,6 +1880,7 @@
     const _p = obtenerPerfil();
     if (_p && _p.email) payload.emailUsuario = _p.email;
     if (_p && _p.nombre) payload.nombreUsuario = _p.nombre;
+    if (getModo() === 'calidad') payload.modo = 'calidad';
     payload.appToken = APP_TOKEN;
 
     try {
@@ -2309,9 +2335,12 @@
   // PERFIL Y SESIÓN DE USUARIO
   // =============================================
   const PERFIL_KEY     = 'wt_perfil';
-  const SESION_APP_KEY  = 'wt_sesion_app';
-  const APP_TOKEN       = 'wts-2026-k9x7m';
-  const PIN_SALT        = 'walk-through-swissotel-2026';
+  const SESION_APP_KEY = 'wt_sesion_app';
+  const MODO_KEY       = 'wt_modo';
+  const APP_TOKEN      = 'wts-2026-k9x7m';
+  const PIN_SALT       = 'walk-through-swissotel-2026';
+
+  function getModo() { return sessionStorage.getItem(MODO_KEY) || 'walkthrough'; }
   const AVATAR_COLORES  = ['#7B1827','#0F766E','#7C3AED','#B45309','#0369A1','#BE185D','#15803D'];
 
   async function hashearPIN(pin) {
@@ -2334,15 +2363,52 @@
     try { return JSON.parse(localStorage.getItem(PERFIL_KEY)); } catch { return null; }
   }
 
+  function actualizarBranding(modo) {
+    const esCalidad = modo === 'calidad';
+    document.getElementById('flBrandTitleEl').textContent = esCalidad ? 'CALIDAD' : 'WALK THROUGH';
+    document.getElementById('flBrandSubEl').textContent   = esCalidad
+      ? 'Swissotel Lima Peru · Auditorías de Calidad'
+      : 'Swissotel Lima Peru · Control de calidad operativo';
+    document.getElementById('headerTitleEl').textContent  = esCalidad ? 'Calidad QA' : 'Walk Through';
+    document.getElementById('headerSubEl').textContent    = esCalidad
+      ? 'Swissotel Lima Peru · Auditorías de Calidad'
+      : 'Swissotel Lima Peru · Registro fotográfico operativo';
+    const labelTitulo = document.getElementById('labelAreaTitulo');
+    const labelHoja   = document.getElementById('labelAreaHoja');
+    if (labelTitulo) labelTitulo.textContent = esCalidad ? 'Área auditada' : 'Sección';
+    if (labelHoja)   labelHoja.style.display = esCalidad ? 'none' : '';
+  }
+
+  function seleccionarModo(modo) {
+    sessionStorage.setItem(MODO_KEY, modo);
+    actualizarBranding(modo);
+    document.getElementById('modoSelectorVista').style.display = 'none';
+    mostrarLogin();
+  }
+
+  function mostrarSelectorModo() {
+    actualizarBranding('walkthrough');
+    document.getElementById('modoSelectorVista').style.display = 'block';
+    document.getElementById('loginVista').style.display        = 'none';
+    document.getElementById('regVista').style.display          = 'none';
+    document.getElementById('appStartOverlay').style.display   = 'flex';
+  }
+
   function initApp() {
-    const perfil = obtenerPerfil();
-    if (!perfil) {
+    const perfil      = obtenerPerfil();
+    const modoElegido = sessionStorage.getItem(MODO_KEY);
+    if (!modoElegido) {
+      mostrarSelectorModo();
+    } else if (!perfil) {
+      actualizarBranding(modoElegido);
       mostrarLoginSinPerfil();
       document.getElementById('appStartOverlay').style.display = 'flex';
     } else if (!sessionStorage.getItem(SESION_APP_KEY)) {
+      actualizarBranding(modoElegido);
       mostrarLoginVista(perfil);
       document.getElementById('appStartOverlay').style.display = 'flex';
     } else {
+      actualizarBranding(modoElegido);
       entrarApp(perfil);
     }
   }
@@ -2529,14 +2595,24 @@
 
   function entrarApp(perfil) {
     document.getElementById('appStartOverlay').style.display = 'none';
+    const esCalidad = getModo() === 'calidad';
 
-    // Auto-rellenar y ocultar campos del perfil
+    // Auto-rellenar responsable y ocultar ese grupo
     document.getElementById('campo-responsable').value       = perfil.nombre;
     document.getElementById('campo-responsable-texto').value = perfil.nombre;
-    document.getElementById('campo-area').value              = perfil.seccion;
-    document.getElementById('campo-area-texto').value        = perfil.seccion;
     document.getElementById('grupoResponsable').style.display = 'none';
-    document.getElementById('grupoSeccion').style.display     = 'none';
+
+    if (esCalidad) {
+      // Calidad: el QA elige qué área audita — mostrar selector sin pre-rellenar
+      document.getElementById('campo-area').value       = '';
+      document.getElementById('campo-area-texto').value = '';
+      document.getElementById('grupoSeccion').style.display = 'block';
+    } else {
+      // Walk Through: auto-rellenar la sección del usuario y ocultar
+      document.getElementById('campo-area').value       = perfil.seccion;
+      document.getElementById('campo-area-texto').value = perfil.seccion;
+      document.getElementById('grupoSeccion').style.display = 'none';
+    }
 
     // Badge de perfil
     const col = avatarColor(perfil.nombre);
@@ -2568,10 +2644,9 @@
 
   function cerrarSesion() {
     sessionStorage.removeItem(SESION_APP_KEY);
+    sessionStorage.removeItem(MODO_KEY);
     limpiarFormularioRegistro();
-    const perfil = obtenerPerfil();
-    mostrarLogin();
-    document.getElementById('appStartOverlay').style.display = 'flex';
+    mostrarSelectorModo();
   }
 
   function irARegistro() {
