@@ -808,8 +808,8 @@
       <div class="fl-brand-logo-wrap">
         <img src="./logoQSF.png" alt="QSF">
       </div>
-      <div id="flBrandTitleEl" class="fl-brand-title">WALK THROUGH</div>
-      <div id="flBrandSubEl" class="fl-brand-sub">Swissotel Lima Peru &nbsp;·&nbsp; Control de calidad operativo</div>
+      <div id="flBrandTitleEl" class="fl-brand-title" style="display:none">WALK THROUGH</div>
+      <div id="flBrandSubEl" class="fl-brand-sub" style="font-weight:700;font-size:13px;color:#7B1827">Swissotel Lima Peru &nbsp;·&nbsp; Control de calidad operativo</div>
     </div>
 
     <!-- ── SELECTOR DE MÓDULO ── -->
@@ -2371,8 +2371,7 @@
 
   function actualizarBranding(modo) {
     const esCalidad = modo === 'calidad';
-    document.getElementById('flBrandTitleEl').textContent = esCalidad ? 'CALIDAD' : 'WALK THROUGH';
-    document.getElementById('flBrandSubEl').textContent   = esCalidad
+    document.getElementById('flBrandSubEl').textContent = esCalidad
       ? 'Swissotel Lima Peru · Auditorías de Calidad'
       : 'Swissotel Lima Peru · Control de calidad operativo';
     document.getElementById('headerTitleEl').textContent  = esCalidad ? 'Calidad QA' : 'Walk Through';
