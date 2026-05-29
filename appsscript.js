@@ -126,11 +126,15 @@ function doPost(e) {
 
     const emailUsuario  = p.emailUsuario  || '';
     const nombreUsuario = p.nombreUsuario || '';
+    const esCalidad     = p.modo === 'calidad';
     const fotoInfo = guardarFotoEnDrive(p.foto);
     const datosGuardar = {
       fecha:        p.fecha || new Date().toLocaleString('es-PE'),
-      area:         p.area || 'General',
-      subarea:      p.subarea || '',
+      // Calidad: todas las auditorías van a la pestaña 'Calidad'; el área auditada queda en subarea
+      area:         esCalidad ? 'Calidad' : (p.area || 'General'),
+      subarea:      esCalidad
+                      ? (p.area || '') + (p.subarea ? ' · ' + p.subarea : '')
+                      : (p.subarea || ''),
       descripcion:  p.descripcion || '',
       responsable:   p.responsable || '',
       participantes: p.participantes || '',
